@@ -201,6 +201,12 @@ theme_set_ils <- function(theme = theme_ils()){
 
 
 
+# Common caption names ----------------------------------------------------
+
+cap_thjodskra <- "Heimild: Þjóðskrá Íslands"
+cap_ils_thjodskra <- "Heimild: Þjóðskrá Íslands og hagdeild Íbúðalánasjóðs"
+cap_hagstofa <- "Heimild: Hagstofa Íslands"
+cap_ils_hagstofa <- "Heimild: Hagstofa Íslands og hagdeild Íbúðalánasjóðs"
 
 
 # read functions ----------------------------------------------------------

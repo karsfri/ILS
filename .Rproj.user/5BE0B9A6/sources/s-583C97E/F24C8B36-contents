@@ -1,0 +1,48 @@
+---
+title: "Template"
+output: html_notebook
+---
+
+```{r setup, include=FALSE,echo=FALSE}
+
+# set template
+source("https://github.com/karsfri/ILS/raw/master/theme_ils.R")
+theme_set_ils()
+
+library(DBI)
+library(tidyverse)
+library(sf)
+library(seasonal)
+library(tsibble)
+library(lubridate)
+library(readxl)
+
+# Þannig að mánaðarnöfnin koma rétt
+Sys.setenv(LANGUAGE="is")
+Sys.setlocale("LC_TIME", "Icelandic")
+
+knitr::opts_chunk$set(
+	echo = FALSE,
+	fig.width = 18/2.54,
+	message = FALSE,
+	warning = FALSE,
+	include = TRUE,
+	dpi = 300,
+	dev.args=list(bg="white")
+)
+
+
+# SQL tenging
+con <- dbConnect(odbc::odbc(), "HgrDev", timeout = 10, encoding = "WINDOWS-1252")
+
+```
+
+```{sql, connection = con, output.var="df"}
+
+
+```
+
+```{r}
+df
+```
+
