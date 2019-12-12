@@ -102,11 +102,11 @@ theme_ils <- function(){
 # scale functions ---------------------------------------------------------
 
 scale_colour_discrete <- function(...) {
-  scale_colour_manual(..., values = palette_ils_darker)
+  scale_colour_manual(..., values = palette_ils_darker %>% unname())
 }
 
 scale_fill_discrete <- function(...) {
-  scale_colour_manual(..., values = palette_ils)
+  scale_fill_manual(..., values = palette_ils %>% unname())
 }
 
 # Plot helper functions ---------------------------------------------------
@@ -195,19 +195,27 @@ ggsave_both <- function(filename, plot = last_plot(), width = width_wide,
 
 # Set theme  --------------------------------------------------------------
 
+
 theme_set_ils <- function(theme = theme_ils()){
+  # Wierd implimentation because the palettes cannot be named 
+  yellow <- palette_light["yellow"]
+  yellow_dark <- palette_dark["yellow"]
+  red <- palette_dark ["red"]
+  
+  names(yellow) <- NULL
+  names(yellow_dark) <- NULL
+  names(red) <- NULL
   
   ggplot2::theme_set(theme)
-  update_geom_defaults("boxplot", list(fill = palette_light["yellow"], outlier.colour = palette_dark["red"]))
-  # update_geom_defaults("boxplot", list(outlier.colour = palette_dark["red"]))
-  update_geom_defaults("col", list(fill = palette_light["yellow"], colour = NA))
-  update_geom_defaults("bar", list(fill = palette_light["yellow"], colour = NA))
-  update_geom_defaults("area", list(fill = palette_light["yellow"], colour = NA))
-  update_geom_defaults("line", list(fill = palette_dark["yellow"]))
-  update_geom_defaults("point", list(fill = palette_dark["yellow"], size = 3))
-
+  update_geom_defaults(GeomBoxplot, list(fill = yellow))
+  # update_geom_defaults(GeomBoxplot, list(outlier.color = red))
+  update_geom_defaults("col", list(fill = yellow, color = NA))
+  update_geom_defaults("bar", list(fill = yellow, color = NA))
+  update_geom_defaults("area", list(fill = yellow, color = NA))
+  update_geom_defaults("line", list(color = yellow_dark))
+  update_geom_defaults("point", list(color = yellow_dark, size = 3))
+  
 }
-
 
 
 # Common caption names ----------------------------------------------------
