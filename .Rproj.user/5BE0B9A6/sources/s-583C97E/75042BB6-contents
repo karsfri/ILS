@@ -198,8 +198,8 @@ ggsave_both <- function(filename, plot = last_plot(), width = width_wide,
 theme_set_ils <- function(theme = theme_ils()){
   
   ggplot2::theme_set(theme)
-  update_geom_defaults("boxplot", list(fill = palette_light["yellow"]))
-  update_geom_defaults("boxplot", list(outlier.colour = palette_dark["red"]))
+  update_geom_defaults("boxplot", list(fill = palette_light["yellow"], outlier.colour = palette_dark["red"]))
+  # update_geom_defaults("boxplot", list(outlier.colour = palette_dark["red"]))
   update_geom_defaults("col", list(fill = palette_light["yellow"], colour = NA))
   update_geom_defaults("bar", list(fill = palette_light["yellow"], colour = NA))
   update_geom_defaults("area", list(fill = palette_light["yellow"], colour = NA))
