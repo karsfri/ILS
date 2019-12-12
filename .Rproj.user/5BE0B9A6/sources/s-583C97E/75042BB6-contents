@@ -99,6 +99,15 @@ theme_ils <- function(){
 }
 
 
+# scale functions ---------------------------------------------------------
+
+scale_colour_discrete <- function(...) {
+  scale_colour_manual(..., values = palette_ils_darker)
+}
+
+scale_fill_discrete <- function(...) {
+  scale_colour_manual(..., values = palette_ils)
+}
 
 # Plot helper functions ---------------------------------------------------
 
