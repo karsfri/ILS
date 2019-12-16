@@ -38,7 +38,7 @@ palette_dark <- c(
   blackish = "#0C191D",
   green = "#3E884E",
   orange = "#BE7117",
-  purple = ""#8C426B"
+  purple = "#8C426B"
 )
 
 # Palette for the montly reports - use for areas and columns
@@ -113,7 +113,7 @@ scale_colour_discrete <- function(...) {
 }
 
 scale_fill_discrete <- function(...) {
-  scale_fill_manual(..., values = palette_ils %>% unname())
+  scale_fill_manual(..., values = palette_ils)
 }
 
 # Plot helper functions ---------------------------------------------------
