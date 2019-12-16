@@ -1,0 +1,530 @@
+---
+title: "Yfirlit yfir helstu föll og pakka"
+output:
+  html_document:
+    df_print: paged
+---
+
+# Notbook og Rmarkdown
+
+Hægt að geyma texta og kóða á sama stað
+Hægt að blanda saman kóða úr mismunandi forritunarmálum.
+
+# Þetta er titill
+
+## Þetta undirtitill
+
+... Þannig að það er hægt að gera skýrslu.
+
+* Lista
+* má 
+* gera
+* svona
+
+1. það
+2. er
+3. líka 
+4. hægt að gera númeraða lista
+
+*Þetta* er skáletrað, **Þetta** er feitletrað og ***Þetta*** er bæði.
+
+Hægt er að nota latex stærðfræði notation með því að setja dollara merki fyrir framan og aftan, eins og $\hat{\beta}=(\mathbf{x}^T\mathbf{x})^{-1}\mathbf{x}^T\mathbf{y}$ :)
+
+Einnig hægt að setja inn chunk svona:
+
+Mathematical displays are marked off with `\[` and `\]`, as in
+\[
+e^{i \pi} = -1
+\]
+
+
+
+Skýrslan er keyrð með *ctrl+shift+k*
+
+
+## Kóði
+
+hægt að setja inn kóða "chunk" með því að setja "```" fremst og aftast. 
+
+*ctr+alt+i* gerir það sjálfkrafa
+
+Hægt er að keyra allan chunkinn með *ctr+shift+enter* eða ýta á 'play' takkann sem birtist.
+
+
+```{r}
+
+# Þetta er komment. Hægt er að kommenta kóða með því að ýta á ctr+shift+c
+
+5 + 5
+
+```
+
+Yfirleitt er fyrsti búturinn *setup* bútur þar sem við hlöðum inn pökkum sem við ætlum að nota og setjum fram stillingar:
+
+```{r}
+knitr::opts_chunk$set(
+	echo = TRUE,                         # Á að prenta kóðan? Hef þetta oft FALSE.
+	fig.width = 16 / 2.54,               # Breidd á myndum í tommum, hægt að breyta í hverjum chunk
+	fig.asp = 8 / 16,
+	message = FALSE,                     # Á að Sýna skilaboð í html skjalinu?
+	warning = FALSE,                     # Á að sýna warnings
+	include = TRUE,
+	dpi = 600,
+	dev = "png",
+	dev.args=list(bg="white"),
+	out.width = "100%"
+)
+
+# Fer yfir pakkanna seinna!
+library(DBI)
+library(tidyverse)
+library(sf)
+library(seasonal)
+library(tsibble)
+library(lubridate)
+library(here)
+library(dbplyr)
+```
+
+
+Sjá helstu skipanir undir *help/markdown quick reference*
+
+Sjá ýtarlegri samantekt um Rmarkdown:
+
+* https://bookdown.org/yihui/rmarkdown/
+* https://www.stat.cmu.edu/~cshalizi/rmarkdown/
+
+
+# R-project
+
+Eina sem það gerir er að halda utan um R skjöl og Rmd skjöl í sömu möppu og notar staðsetningu *.Rproj*
+
+## pakkar
+
+Flestir pakkar eru á *cran*. Þá er hægt að ná í svona:
+
+```{r}
+# Ég kommenta út fallið svo ég keyri það ekki óvart
+# install.packages("here")
+```
+
+
+# Sækja gögn
+
+## Slóðir
+
+Í windows virkar bara "/" eða "\\" en ekki "\" því það er escape character.
+
+```{r eval=FALSE, error=TRUE, include=FALSE}
+slod <- "G:\Hagdeild\Manadarskyrsla_Hagdeildar\2019\November\Byggingamarkadur"    # virkar ekki
+```
+
+
+```{r}
+slod <- "G:/Hagdeild/Manadarskyrsla_Hagdeildar/2019/November/Byggingamarkadur"      # virkar
+slod <- "G:\\Hagdeild\\Manadarskyrsla_Hagdeildar\\2019\\November\\Byggingamarkadur" # virkar
+```
+
+Í linux og apple er hins vegar yfirleitt notað "\". Því er hægt að nota fallið *here* úr *here* pakkanum til þess að notast við slóð sem virkar á öllum stýrikerfum:
+
+```{r}
+slod <- here::here("G", "Hagdeild", "Manadarskyrsla_Hagdeildar", "2019", "November", "Byggingamarkadur")
+
+```
+
+
+## Úr grunninum
+
+Hægt er að blanda saman kóða úr mismunandi forritum. Fyrst þarf að búa til tengingu við R.
+
+```{r}
+
+con <- dbConnect(
+  drv = odbc::odbc(),
+  dsn = "HgrDev", 
+  timeout = 10, 
+  # database = "HgrProd",
+  encoding = "WINDOWS-1252"
+  )
+
+```
+
+Svo er hægt að setja inn *SQL* chunk og vista outputið sem breytu með nafni sem er skilgreint í haus sem "output.var"
+
+```{sql connection=con, output.var="leiga"}
+SELECT [Dim_Timi_Utgefid]
+      ,[Dim_Timi_Thinglyst]
+      ,[Dim_Fasteignir]
+      ,[Faerslunumer]
+      ,[Kaupverd]
+      ,[Kaupverd_nuvirdi]
+      ,[FjoldiFasteigna]
+      ,[FjoldiMatseininga]
+      ,[OnothaefurSamningur]
+      ,[AuglystDags]
+      ,[AuglystSoluverd]
+      ,[SeltYfirAuglystuSoluverdi]
+      ,[SeltAAuglystuSoluverdi]
+      ,[SeltUndirAuglystuSoluverdi]
+      ,[Postnumer]
+      ,[Landshlutaflokkun]
+      ,[Landshluti]
+      ,[Lengdargrada]
+      ,[Breiddargrada]
+      ,[Ar]
+      ,[ByggingarAr]
+      ,[ByggingarstigByggingarfulltrua]
+      ,[Fastanumer]
+      ,[Matsstig]
+  FROM [HgrDwh].[dwh].[Fact_Kaupsamningar_Stakar] s
+    INNER JOIN [HgrDwh].[dwh].[Dim_Fasteignir] f
+    ON  s.Dim_Fasteignir = f.Dim_Fasteignir_sk
+    INNER JOIN [HgrDwh].[dwh].[Dim_Timi] t
+    ON s.Dim_Timi_Utgefid = dim_timi_sk
+WHERE t.Ar > 2012 
+AND ErIbud = 1
+```
+
+Þá er ég kominn með breytuna *leiga* sem ég get notað í R:
+
+```{r}
+leiga
+```
+
+
+## tenging við grunn
+
+Geyma
+
+## csv
+
+
+## excel
+
+# Meðhöndlun gagna
+
+Þrjár "bragðtegundir"; base R, tidyverse og data.table. Hér er farið yfir *tidyverse*.
+
+## tsibble
+
+Yfirleitt erum við að vinna með töflur með klassa "data.frame". 
+
+```{r}
+class(mtcars)
+```
+
+Tveir stórir gallar við þann hluti af þeim klassa er að þeir prentast mjög kjánalega út (á bara við þegar ekki er verið að vinna í markdown) og ef aðeins er valin einn dálkur breytist hann sjálfkrafa í vector sem hefur aðra eiginleika. Því er hætt við að fá leiðinlegar villur sem erfitt er að finna.
+
+```{r}
+mtcars[ ,1] # allar raðir, fyrsti dálkur
+
+# mtcars[ , 1, drop = FALSE] kemur í veg fyrir umbreytingu, en er auðvelt að gleyma.
+
+```
+
+```{r}
+mtcars <- as_tibble(mtcars)
+class(mtcars)
+```
+
+
+```{r}
+mtcars[ ,1]
+```
+
+
+## magrittr
+
+Pípur eru dálítið umdeildar en geta verið mjög þægilegar!
+
+Í stað þess að skrifa $f(x, y)$ er hægt að skrifa $x\text{ %>% }f(y)$.
+
+Sérstaklega hjálplegt því gögnin eru oft fyrsta argument-ið.
+
+Hægt að nota *ctrl+shift+M* til að setja inn pípu sjálfkrafa
+
+```{r}
+# einhverjar tölur
+x <- c(0.109, 0.359, 0.63, 0.996, 0.515, 0.142, 0.017, 0.829, 0.907)
+
+# Hefðbundna leiðin fyrir útreikninga:
+round(exp(diff(log(x))), 1)
+
+```
+
+```{r}
+# Með endurteknu assignment er það læsilegra
+
+x2 <- log(x)
+x2 <- diff(x2)
+x2 <- exp(x2)
+x2 <- round(x2, 1)
+```
+
+
+```{r}
+# Með pípu er það þægilegra:
+x %>% 
+  log() %>%
+  diff() %>%
+  exp() %>%
+  round(1)
+```
+
+
+## tidyr
+
+Hugmyndin á bakvið *tidyverse* pakkanna er að öll gögn, bæði intak og úttak, séu *tidy*, sem þýðir í raun aðeins að hver dálkur hefur eina, og aðeins eina breytu (Þótt að hvað teljist breyta getur verið óljóst og farið aðeins eftir samhengi). Annars staðar er þetta kallað *long* formatt. Í raun sama formatt á gögnunum eins og excel krefst til þess að hægt sé að nota pivot-töflur með góðu móti. 
+
+Sjá meira um tidy gögn [hér](https://vita.had.co.nz/papers/tidy-data.pdf)
+
+Þetta form er þægilegt fyrir gagnavinnslu en óþægilegt til þess að lesa úr og þess vegna er gott að geta farið á milli!
+
+Tidyr pakkinn inniheldur nokkur föll sem hjálpa að ymbreyta *untidy* gögnum í *tidy* gögn. Það er líklega lítil þörf á honum þegar notast er við gögn úr grunninum en getur verið mjög hjálplegur við önnur gögn, t.d. úr excel.
+
+
+### gather (pivot_longer)
+
+Fölling *gather* og *pivot_longer* eru bæði til þess fallin að fara úr *wide* formatti yfir í *long*. *Gather* er fljótlegra en *pivot_longer* er sveigjanlegra og sumum finnst það læsilegra.
+
+Hérna er gagnasett frá hagstofunni þar sem hluti af dálkheitum, þ.e. landssvæði, eru í raun breytur.
+
+```{r}
+
+pop <- read_csv(
+  "https://px.hagstofa.is:443/pxis/sq/16fe80b6-c886-4d5d-b2e4-17240fd28f2f", 
+  locale = locale(
+    encoding = "WINDOWS-1252",
+    decimal_mark = ",", 
+    grouping_mark = "."
+  )
+)
+
+pop
+
+```
+
+Hér er hægt að nota *gather* fallið til þess að safna saman dálkum. Fyrsta argumentið (fyrir utan gögnin sem eru fyrir framan í pípunni) er nafnið sem dálkurinn fær sem geymir nöfnin þá þeim dálkum sem er safnað saman. Annað argumentið erð nafn á dálkinum sem geymir gögnin. Svo koma nöfn á dálkunum sem á að safna saman. Hér má nota ýmiss hjálparföll sem verður vikið að síðar.
+
+```{r}
+pop_tidy <- pop %>% 
+  gather(
+    key = "Landssvæði",
+    value = "Fólksfjöldi",
+    Höfuðborgarsvæði:`Suðurland` # Tilgreina hvaða dálkum á að safna saman
+  )
+
+pop_tidy
+# Athugið, vildi ekki taka "Alls" með!
+```
+
+Önnur leið, oft fljótlegri er að tilgreina hvaða breytur á ekki að safna saman:
+
+```{r}
+
+pop %>% 
+  gather(
+    key = "Landssvæði",
+    value = "Fólksfjöldi",
+    - Aldur,
+    - Ár,
+    - Kyn,
+    - Alls
+  )
+
+```
+
+```{r}
+pop %>% 
+  pivot_longer(
+    cols = Höfuðborgarsvæði:`Suðurland`, 
+    names_to = "Landssvæði",
+    values_to = "Fólksfjöldi"
+  )
+
+```
+
+### spread og pivot_wider
+
+Föllin *spread* og *pivot_wider* eru andhverfur við *gather* og *pivot_longer*. Mun sjaldnar notað, en oft gott áður en gögn eru skrifuð út í csv eða excel skjal ef að helsti tilgangur þeirra er að skoða þau en ekki vinna áfram með þau.
+
+```{r}
+
+pop_tidy %>% 
+  select(-Alls) %>% # Tók út "Alls" til þess að fá Karla og Konur í sömu röðum. 
+  spread(Kyn, Fólksfjöldi)
+
+```
+
+```{r}
+
+pop_tidy %>% 
+  select(-Alls) %>% 
+  pivot_wider(
+    names_from = Kyn,
+    values_from = Fólksfjöldi
+  )
+
+```
+
+Sjá flóknari notkun [hér](https://tidyr.tidyverse.org/articles/pivot.html).
+
+
+### SQL eftirhermur
+
+Hægt er að tengja saman gögn úr mismunandi *df* með föllunum left_join, right_join, inner_join, og full_join. Ef að töflurnar hafa sömu nöfn **og** sama classa (t.d. factor, charachter, logical, int eða double).
+
+Föllinn semi_join má nota til þess að sjá hvaða raðir verða "join-aðar" og anti_join má nota til þess að sjá hvaða raðir verða ekki "join-aðar".
+
+Ef töflurnar hafa sömu dálkaheiti má sameina þær með bind_rows (fara varlega!) og ef þær eru með jafnmörgum röðum má nota bind_columns.
+
+Mengja virkjarnir intersect, setdiff og union má beita á raðir ef að dálkar eru þeir sömu.
+
+### Önnur hjálpleg föll
+
+* *seperate* Til þess að splitta einum dálki í tvo eða fleiri dálka
+* *extract* Sama og *seperate* nema hendir öllum dálkum nema fyrsta
+* *unite* Sameinar tvo eða fleiri dálka í einn
+* *complete* Bætir við röðum sem vantar; breytir implicit *NA* í explicit *NA*
+* *fill* fyllir uppí *NA* miðað við gildin á undan eða eftir (Getur verið algjörlega nauðsynlegt að nota með group_by til þess að ekki séu notuð óviðeigandi gildi - sjá síðar)
+* *drop_na* henda út röðum með *NA* gildi í ákveðnum dálkum (eða einhverjum dálkum)
+* *replace_na* Sá sem giskar rétt á þetta fær ís að launum.
+
+
+## dplyr
+
+Samansafn af fimm sögnum, ásamt hjálparföllum, sem auðvelda alla meðhöndlun gagna. 
+
+* mutate
+* select
+* filter
+* summarize
+* arrange
+
+*dplyr* pakkinn inniheldur einnig *group_by* fallið sem gerir það að verkum að aðrar aðgerðir séu skipt í hópa eftir gildum á viðkomandi breytum. Sést betur með notkun.
+
+```{r}
+pop_tidy %>% 
+  group_by(Landssvæði) %>% 
+  class
+  
+```
+
+*mutate* fallið er notað til þess að framkvæma útreikninga á dálkum. Athugið, að ólíkt *base-R* er ekki gert ráð fyrir gæsalöppum á dálkheitum. Það getur gert lífið aðeins flóknara þegar verið er að búa til föll, en það er dýflisa sem má bíða betri tíma! (hint: litlum sálum ráðlagt að googla ekki 'rlang' rétt fyrir svefninn).
+
+```{r}
+pop_tidy %>% 
+  group_by(Landssvæði, Kyn) %>% # Hér er mikilvægt að hópa bæði eftir kyni og Landssvæði, annars væri niðurstaðan della!
+  mutate(
+    Fjölgun = Fólksfjöldi / lag(Fólksfjöldi) - 1,
+    Hlutfall = Fólksfjöldi / Alls,
+    `Hlutfallsleg fjölgun` = Fjölgun / Fólksfjöldi # Get nýtt það sem er reiknað að ofan innan sama falls! 
+  )
+```
+
+*mutate* virkar aðeins ef að úttakið er jafn stórt og fjöldi raða!
+
+*select* fallið er nýtt til þess að velja dálka
+
+```{r}
+pop_tidy %>% 
+  select(Fólksfjöldi) # Frekar gagnslaust í þessu samhengi
+```
+
+Einnig hægt að nota til þess að henda út dálkum:
+
+```{r}
+pop_tidy %>% 
+  select(-Alls)
+```
+
+*filter* er notað til þess að velja raðir út frá skilyrðum:
+
+```{r}
+pop_tidy %>% 
+  group_by(Landssvæði, Kyn) %>% # Hér er mikilvægt að hópa bæði eftir kyni og Landssvæði, annars væri niðurstaðan della!
+  mutate(
+    Fjölgun = Fólksfjöldi / lag(Fólksfjöldi) - 1,
+    Hlutfall = Fólksfjöldi / Alls,
+    `Hlutfallsleg fjölgun` = Fjölgun / Fólksfjöldi # Get nýtt það sem er reiknað að ofan innan sama falls! 
+  ) %>% 
+  filter(
+    !is.na(Fjölgun),
+    Kyn == "Karlar"
+  )
+```
+
+Athugið að föll inní mutate ná utan um allan dálkin í viðkomkandi hóp eins og hann er skilgreindur miðað við *group_by* á meðan nafn á dálki vísar aðeins til viðkomandi raðar. Því má t.a.m. fá hlutfallslega skiptingu karla og kvenna með eftirfarandi hætti:
+
+```{r}
+pop_tidy %>% 
+  group_by(Ár, Landssvæði) %>% 
+  mutate(
+    # Hér nær fyrra 'Fólksfjöldi' breytan til einnar raðar, en sú seinni til tveggja!
+    Hlutfall = Fólksfjöldi / sum(Fólksfjöldi)
+  )
+```
+
+
+
+*summarize* er svipað og mutate, en þar er fjöldi raða jafn margar og fjöldi hópa:
+
+```{r}
+pop_tidy %>% 
+  filter(Ár == max(Ár)) %>% 
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  )
+```
+
+Sum föll virka bæði í summarize og mutate:
+
+```{r}
+pop_tidy %>% 
+  filter(Ár == max(Ár)) %>% 
+  group_by(Ár, Landssvæði) %>% 
+  mutate(
+    Alls = sum(Fólksfjöldi),
+    n = n() # n() er hjálparfall sem sýnir fjölda raða!
+  )
+```
+
+*count* sýnir fjölda raða eftir tilgreindum breytum, en group_by breytum er alltaf bætt við!
+
+```{r}
+pop_tidy %>% 
+  count(Ár, Kyn)
+
+```
+
+```{r}
+pop_tidy %>% 
+  group_by(Kyn) %>% 
+  count(Ár)
+
+```
+
+*tally* er svipað en ekki er farið yfir það hér.
+
+
+
+## lubridate
+
+Lubridate pakkinn er aðalega notaður til þess að vinna með dagsetningar í R. Þegar gögn eru sótt í gegnum SQL inní R koma dagsetningar sem strengir. 
+
+
+```{r}
+leiga %>% 
+  mutate(
+    Dim_Timi_Utgefid = Dim_Timi_Utgefid %>% ymd(),
+    Dim_Timi_Thinglyst = Dim_Timi_Thinglyst %>% ymd()
+  )
+```
+
+
+
+# Gröf
+
+
+## forcats
