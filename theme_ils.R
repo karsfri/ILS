@@ -55,6 +55,13 @@ palette_ils_darker <- c(
   palette_light
 )
 
+palette_light <- palette_light %>% unname()
+palette_medium <- palette_medium %>% unname()
+palette_dark <- palette_dark %>% unname()
+palette_ils <- palette_ils %>% unname()
+palette_ils_darker <- palette_ils_darker %>% unname()
+
+
 # theme for montly report -------------------------------------------------
 
 tsm <- 1 # 4 / 3 # text size multiplier
@@ -198,9 +205,9 @@ ggsave_both <- function(filename, plot = last_plot(), width = width_wide,
 
 theme_set_ils <- function(theme = theme_ils()){
   # Wierd implimentation because the palettes cannot be named 
-  yellow <- palette_light["yellow"]
-  yellow_dark <- palette_dark["yellow"]
-  red <- palette_dark ["red"]
+  yellow <- palette_light[1]
+  yellow_dark <- palette_dark[1]
+  red <- palette_dark [3]
   
   names(yellow) <- NULL
   names(yellow_dark) <- NULL
