@@ -5,7 +5,7 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "3921581318",
+    "hash" : "0",
     "id" : "985530B3",
     "lastKnownWriteTime" : 1576760432,
     "last_content_update" : 1576760432154,
@@ -13,10 +13,10 @@
     "project_path" : "Demo.Rmd",
     "properties" : {
         "chunk_output_type" : "inline",
-        "cursorPosition" : "88,61",
+        "cursorPosition" : "64,10",
         "docOutlineSize" : "104.70026397749476",
         "docOutlineVisible" : "1",
-        "scrollLine" : "76",
+        "scrollLine" : "59",
         "tempName" : "Untitled2",
         "working_dir" : "default"
     },

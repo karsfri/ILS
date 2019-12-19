@@ -55,8 +55,8 @@ palette_hms_darker <- c(
 palette_light <- palette_light %>% unname()
 palette_medium <- palette_medium %>% unname()
 palette_dark <- palette_dark %>% unname()
-palette_ils <- palette_ils %>% unname()
-palette_ils_darker <- palette_ils_darker %>% unname()
+palette_ils <- palette_hms %>% unname()
+palette_ils_darker <- palette_hms_darker %>% unname()
 
 
 # theme for montly report -------------------------------------------------
@@ -137,7 +137,7 @@ flip <- function(...){
   
 }
 
-geom_zero_line <- function(..., color = palette_dark["blackish"]){
+geom_zero_line <- function(..., color = palette_dark[4]){
   geom_hline(yintercept = 0, color = color, ...)
 }
 
@@ -200,7 +200,7 @@ ggsave_both <- function(filename, plot = last_plot(), width = width_wide,
 # Set theme  --------------------------------------------------------------
 
 
-theme_set_ils <- function(theme = theme_ils()){
+theme_set_hms <- function(theme = theme_hms()){
   # Wierd implimentation because the palettes cannot be named 
   yellow <- palette_light[1]
   yellow_dark <- palette_dark[1]
