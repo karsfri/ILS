@@ -76,8 +76,8 @@ theme_ils <- function(){
       panel.grid.major.y = element_line(colour = "gray90", size = 0.2),
       panel.grid.major.x = element_blank(),
       
-      strip.text = element_text(family = family = "Setimo Light", size = 7 * tsm, color = "black", face = "bold"),
-      strip.text.x = element_text(family = family = "Setimo Light", size = 7 * tsm, color = "black", face = "bold"),
+      strip.text = element_text(family = "Setimo Light", size = 7 * tsm, color = "black", face = "bold"),
+      strip.text.x = element_text(family = "Setimo Light", size = 7 * tsm, color = "black", face = "bold"),
       strip.background = element_blank(),
       
       plot.title = element_text(family = "Setimo", size = 9 * tsm, face = "bold"),
