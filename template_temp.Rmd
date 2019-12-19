@@ -33,7 +33,7 @@ knitr::opts_chunk$set(
 
 
 # SQL tenging
-con <- dbConnect(odbc::odbc(), "HgrDev", timeout = 10, encoding = "WINDOWS-1252")
+con <- dbConnect(odbc::odbc(), "HgrDwh_Prod", timeout = 10, encoding = "WINDOWS-1252")
 
 ```
 

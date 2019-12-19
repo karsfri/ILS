@@ -241,11 +241,12 @@ read_hagstofan <- function(
   encoding = "WINDOWS-1252",
   decimal_mark = ",",
   grouping_mark = ".",
+  delim = ";",
   ...
 ){
   read_delim(
     file = file,
-    delim = ";",
+    delim = delim,
     na = na,
     locale = locale(
       encoding = encoding, 

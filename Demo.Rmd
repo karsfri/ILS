@@ -522,9 +522,71 @@ leiga %>%
   )
 ```
 
+Lubridate pakkinn virkar meira að segja nokkuð vel með íslenska staðla:
+
+```{r}
+vnv <- read_hagstofan("https://px.hagstofa.is:443/pxis/sq/7fa32768-b4c5-4499-a869-5b57c079d90a", delim = "\t")
+
+vnv
+```
+
+```{r}
+vnv %>% 
+  mutate(
+    time = ymd(paste(Ár, Mánuður, 01))
+  )
+```
+
+Þá inniheldur *lubridate* pakkinn ýmiss föll sem auðvelda lífið þegar kemur að því að gera útreikninga sem innihalda tíma.
+
+# Gröf - ggplot
+
+## Grunneiningin
+
+Til eru ýmsar leiðir til þess að gera gröf í R. Hér munum við einbeita okkur af einum pakka, *ggplot2*, sem byggir á *grammar of graphics* hugmyndafræðinni. Hér er í raun hægt að fara mjög djúpt, en aðeins verður tæpt á helstu þáttunum.
+
+*ggplot* fallið er fall sem býr til hlut af classa *gg* og má hugsa sem nánast tóma uppskrift af grafi. 
+
+```{r}
+p <- pop_tidy %>% 
+  ggplot()
+
+str(p)
+```
+
+Við uppskriftina er hægt að bæta ýmsum liðum sem stjórna því hvað er á grafinu. Í lokinn er hægt að prenta það út með ýsmum hætti. Ef plottinu er ekki *asign-að* prentast það sjálfkrafa út í *console*.
+
+Inni upphaflega fallið er yfirleitt skilgreint hvaða litið grafsins stjórnast af hvaða breytu. Það er tekið fram í *aes* fallinu, sem stendur fyrir aestetics, og output-ið úr því er vísað á argument-ið *mapping*. Þættir eiga ekki að stjórnast af gögnum heldur eru alltaf þeir sömu má skilgreina fyrir utan *aes* fallið.
+
+Athugið að nú prentast aðeins tómt graf því ekki er búið að taka fram hvaða *geometry* á að vera á grafinu.
+
+```{r}
+pop_tidy %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, fill = Landssvæði), color = "pink")
+
+```
+
+## geom
+
+Bæta má öðrum liðum við plottið með því `+` virkjanum. Það fyrsta sem er yfirleitt bætt við er *geometry* sem er safn af föllum sem byrja öll á *geom_* og svo er nafninu á viðkomandi *geom* bætt við. Hér hefur verið bætt við *column*.
+
+Ath! Hér virkar *color = "pink"* ekki því að það er búið að skrifa yfir default argumentin með *theme_set_ils*.
 
 
-# Gröf
+```{r}
+pop_tidy %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, fill = Landssvæði), color = "pink") +
+  geom_col()
+```
+
+Einnig er hægt að setja *mappings* í *geom* föllunum, en það er yfirleitt aðeins gert ef að .
+
+```{r}
+pop_tidy %>% 
+  ggplot() +
+  geom_col(aes(x = Ár, y = Fólksfjöldi, fill = Landssvæði), color = "pink")
+```
+
 
 
 ## forcats
