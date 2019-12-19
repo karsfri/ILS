@@ -1,0 +1,4 @@
+"0","vnv %>% "
+"0","  mutate("
+"0","    time = ymd(paste(Ár, Mánuður, 01))"
+"0","  )"

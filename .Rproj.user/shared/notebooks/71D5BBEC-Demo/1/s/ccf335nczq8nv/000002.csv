@@ -1,0 +1,79 @@
+"0","knitr::opts_chunk$set("
+"0","	echo = TRUE,                         # √Å a√∞ prenta k√≥√∞an? Hef √æetta oft FALSE."
+"0","	fig.width = 16 / 2.54,               # Breidd √° myndum √≠ tommum, h√¶gt a√∞ breyta √≠ hverjum chunk"
+"0","	fig.asp = 8 / 16,"
+"0","	message = FALSE,                     # √Å a√∞ S√Ωna skilabo√∞ √≠ html skjalinu?"
+"0","	warning = FALSE,                     # √Å a√∞ s√Ωna warnings"
+"0","	include = TRUE,"
+"0","	dpi = 600,"
+"0","	dev = ""png"","
+"0","	dev.args=list(bg=""white""),"
+"0","	out.width = ""100%"""
+"0",")"
+"0",""
+"0","# Fer yfir pakkanna seinna!"
+"0","library(DBI)"
+"0","library(tidyverse)"
+"0","library(sf)"
+"2","Linking to GEOS 3.6.1, GDAL 2.2.3, PROJ 4.9.3
+"
+"0","library(seasonal)"
+"2","
+Attaching package: ëseasonalí
+
+"
+"2","The following object is masked from ëpackage:tibbleí:
+
+    view
+
+"
+"0","library(tsibble)"
+"2","
+Attaching package: ëtsibbleí
+
+"
+"2","The following object is masked from ëpackage:dplyrí:
+
+    id
+
+"
+"0","library(lubridate)"
+"2","
+Attaching package: ëlubridateí
+
+"
+"2","The following objects are masked from ëpackage:tsibbleí:
+
+    interval, new_interval
+
+"
+"2","The following object is masked from ëpackage:baseí:
+
+    date
+
+"
+"0","library(here)"
+"2","here() starts at C:/Users/Kari.S/Documents/GitHub/ILS
+"
+"2","
+Attaching package: ëhereí
+
+"
+"2","The following object is masked from ëpackage:lubridateí:
+
+    here
+
+"
+"0","library(dbplyr)"
+"2","
+Attaching package: ëdbplyrí
+
+"
+"2","The following objects are masked from ëpackage:dplyrí:
+
+    ident, sql
+
+"
+"0","# Theme og hj√°lparf√∂ll fyrir myndir"
+"0","source(""https://github.com/karsfri/ILS/raw/master/theme_hms.R"")"
+"0",""

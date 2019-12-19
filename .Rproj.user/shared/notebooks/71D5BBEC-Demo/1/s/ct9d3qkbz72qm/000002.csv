@@ -1,0 +1,7 @@
+"0","pop_tidy %>% "
+"0","  filter(Ár == max(Ár)) %>% "
+"0","  group_by(Ár, Landssvæði) %>% "
+"0","  mutate("
+"0","    Alls = sum(Fólksfjöldi),"
+"0","    n = n() # n() er hjálparfall sem sýnir fjölda raða!"
+"0","  )"

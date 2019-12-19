@@ -574,16 +574,16 @@ pop_tidy %>%
 
 Bæta má öðrum liðum við plottið með því `+` virkjanum. Það fyrsta sem er yfirleitt bætt við er *geometry* sem er safn af föllum sem byrja öll á *geom_* og svo er nafninu á viðkomandi *geom* bætt við. Hér hefur verið bætt við *column*.
 
-Ath! Hér virkar *color = "pink"* ekki því að það er búið að skrifa yfir default argumentin með *theme_set_ils*.
+
 
 
 ```{r}
 pop_tidy %>% 
-  ggplot(aes(x = Ár, y = Fólksfjöldi, fill = Landssvæði), color = "pink") +
+  ggplot(aes(x = Ár, y = Fólksfjöldi, fill = Landssvæði)) +
   geom_col()
 ```
 
-Einnig er hægt að setja *mappings* í *geom* föllunum, en það er yfirleitt aðeins gert ef að .
+Einnig er hægt að setja *mappings* í *geom* föllunum, en það er yfirleitt aðeins gert ef að það á að vera mismunandi eftir *geom*. Í *geom* fallinu má einnig bæta við parametrum sem að eiga að vera óbreytt milli mælinga.
 
 ```{r}
 pop_tidy %>% 

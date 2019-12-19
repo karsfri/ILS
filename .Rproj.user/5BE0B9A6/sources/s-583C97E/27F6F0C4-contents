@@ -103,15 +103,6 @@ theme_ils <- function(){
 }
 
 
-# scale functions ---------------------------------------------------------
-
-scale_colour_discrete <- function(...) {
-  scale_colour_manual(..., values = palette_ils_darker %>% unname())
-}
-
-scale_fill_discrete <- function(...) {
-  scale_fill_manual(..., values = palette_ils)
-}
 
 # Plot helper functions ---------------------------------------------------
 
@@ -200,7 +191,8 @@ ggsave_both <- function(filename, plot = last_plot(), width = width_wide,
 # Set theme  --------------------------------------------------------------
 
 
-theme_set_hms <- function(theme = theme_hms()){
+theme_set_hms <- function(theme = theme_hms(), change_palettes = TRUE){
+  # Note that this function has external effects!
   # Wierd implimentation because the palettes cannot be named 
   yellow <- palette_light[1]
   yellow_dark <- palette_dark[1]
@@ -218,6 +210,18 @@ theme_set_hms <- function(theme = theme_hms()){
   update_geom_defaults("area", list(fill = yellow, color = NA))
   update_geom_defaults("line", list(color = yellow_dark))
   update_geom_defaults("point", list(color = yellow_dark, size = 3))
+  
+  if(change_palettes){
+    
+    scale_colour_discrete <<- function(...) {
+      scale_colour_manual(..., values = palette_ils_darker %>% unname())
+    }
+    
+    scale_fill_discrete <<- function(...) {
+      scale_fill_manual(..., values = palette_ils)
+    }
+    
+  }
   
 }
 

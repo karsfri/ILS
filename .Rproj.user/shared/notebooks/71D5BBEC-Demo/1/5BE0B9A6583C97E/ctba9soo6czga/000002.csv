@@ -1,0 +1,5 @@
+"0","p <- pop_tidy %>% 
+  ggplot()
+"
+"2","Error in eval(lhs, parent, parent) : object 'pop_tidy' not found
+"
