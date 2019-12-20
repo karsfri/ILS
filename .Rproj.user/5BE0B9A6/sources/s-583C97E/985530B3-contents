@@ -661,6 +661,28 @@ pop_tidy %>%
 
 ## Theme og titlar
 
+Auðvelt er að bæta við titli, undirtitli og caption eða að breyta nöfnum á ásum:
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption",
+    x = NULL,
+    y = "Þetta er ekki lýsandi nafn á ás"
+  )
+```
+
+
 Búið er að útbúa nýtt *theme* fyrir HMS. Auðvelt er að bæta því við:
 
 ```{r}
@@ -674,7 +696,13 @@ pop_tidy %>%
   geom_line() +
   geom_point() +
   theme_hms() +
-  theme(axis.text.x = element_text(family = "SetimoLight", face = "italic"))
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption",
+    x = NULL,
+    y = "Þetta er ekki lýsandi nafn á ás"
+  )
 ```
 
 
@@ -695,5 +723,7 @@ pop_tidy %>%
     subtitle = "Þetta er undirtitill",
     caption = "Þetta er caption"
   )
+
+
 ```
 ## forcats

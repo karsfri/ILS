@@ -4,7 +4,7 @@ library(tidyverse)
 windowsFonts(Setimo = windowsFont("Setimo"))
 windowsFonts(SetimoLight = windowsFont("Setimo Light"))
 
-
+blue <- "#11223a"
 
 # Colors for monthly report -----------------------------------------------
 
@@ -63,7 +63,7 @@ palette_ils_darker <- palette_hms_darker %>% unname()
 
 tsm <- 1 # 4 / 3 # text size multiplier
 
-theme_hms <- function(){
+theme_hms <- function(tms = 1){
   theme_gray() +
     theme(
       text = element_text(family = "SetimoLight"),
@@ -80,9 +80,9 @@ theme_hms <- function(){
       strip.text.x = element_text(family = "SetimoLight", size = 7 * tsm, color = "black", face = "bold"),
       strip.background = element_blank(),
       
-      plot.title = element_text(family = "Setimo", size = 9 * tsm, face = "bold"),
-      plot.subtitle = element_text(family = "Setimo", size = 7 * tsm),
-      plot.caption = element_text(family = "SetimoLight", size = 7 * tsm),
+      plot.title = element_text(family = "Setimo", size = 12 * tsm, face = "bold", color = blue),
+      plot.subtitle = element_text(family = "Setimo", size = 7 * tsm, color = blue),
+      plot.caption = element_text(family = "SetimoLight", size = 7 * tsm, color = blue, face = "italic"),
       axis.title = element_text(size = 7 * tsm),
       axis.text = element_text(size = 7 * tsm),
       legend.text = element_text(size = 8 * tsm),
