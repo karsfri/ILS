@@ -55,8 +55,8 @@ palette_hms_darker <- c(
 palette_light <- palette_light %>% unname()
 palette_medium <- palette_medium %>% unname()
 palette_dark <- palette_dark %>% unname()
-palette_ils <- palette_hms %>% unname()
-palette_ils_darker <- palette_hms_darker %>% unname()
+palette_hms <- palette_hms %>% unname()
+palette_hms_darker <- palette_hms_darker %>% unname()
 
 
 # theme for montly report -------------------------------------------------

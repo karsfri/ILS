@@ -726,4 +726,36 @@ pop_tidy %>%
 
 
 ```
+
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  theme_hms() +
+  labs(
+    title = "Þetta er titill" %>% toupper(),
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption"
+  ) +
+  scale_color_manual(values = palette_hms_darker)
+
+
+```
+
+## Vista myndir
+
+```{r}
+
+ggsave_both("prufa")
+
+```
+
+
 ## forcats
