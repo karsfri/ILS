@@ -1,5 +1,3 @@
-"0","pop_tidy %>% 
-  ggplot(aes(x = Ár, y = Fólksfjöldi, fill = Landssvæði), color = ""pink"")
-"
-"2","Error in eval(lhs, parent, parent) : object 'pop_tidy' not found
-"
+"0","pop_tidy %>% "
+"0","  ggplot(aes(x = Ár, y = Fólksfjöldi, fill = Landssvæði), color = ""pink"")"
+"0",""

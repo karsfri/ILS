@@ -5,6 +5,20 @@ output:
     df_print: paged
 ---
 
+Hér má finna stutt yfirlit yfir helstu föll og pakka í R. Demó-ið er fullt af slettum og málfræðivillum. Það er með vilja gert. Stafsetningavillur eru óviljandi.
+
+Frekari upplýsingar má finna á eftirfarandi slóðum:
+
+* [R for data science eftir meistara Hadley Wickham](https://r4ds.had.co.nz/)
+* Kári
+* (DataCamp)[https://www.datacamp.com/courses/tech:r]
+* (Heimasíða Tidyverse)[https://www.tidyverse.org/]
+* Google
+* (StackOverflow)[https://stackoverflow.com/#]
+* (CrossVAlidated)[https://stats.stackexchange.com/]
+* (RStudíó Webinars)[https://resources.rstudio.com/webinars]
+* (R-bloggers)[https://www.r-bloggers.com/]
+
 # Notbook og Rmarkdown
 
 Hægt að geyma texta og kóða á sama stað
@@ -572,7 +586,7 @@ pop_tidy %>%
 
 ## geom
 
-Bæta má öðrum liðum við plottið með því `+` virkjanum. Það fyrsta sem er yfirleitt bætt við er *geometry* sem er safn af föllum sem byrja öll á *geom_* og svo er nafninu á viðkomandi *geom* bætt við. Hér hefur verið bætt við *column*.
+Bæta má öðrum liðum við plottið með því `+` virkjanum. Það fyrsta sem er yfirleitt bætt við er *geometry* sem stjórnar því hvort að gögnin séu plottuð sem súlurit, línurit eða eitthvað annað. Öll föllin bera heiti sem byrja á *geom_* og svo er nafninu á viðkomandi *geom* bætt við. Hér hefur verið bætt við *column*.
 
 
 
@@ -591,6 +605,95 @@ pop_tidy %>%
   geom_col(aes(x = Ár, y = Fólksfjöldi, fill = Landssvæði), color = "pink")
 ```
 
+Sjálfgefið val er staflað súlurit, en auðvelt er að breyta því með *position* argumentinu.
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  ggplot(aes(x = Ár, y = Fólksfjöldi, fill = Landssvæði)) +
+  geom_col(position = position_dodge())
+```
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  ggplot(aes(x = Ár, y = Fólksfjöldi, fill = Landssvæði)) +
+  geom_col(position = position_fill())
+
+```
+
+Auðvelt er að breyta yfir í breyta um tegund af plotti með því að breyta um *geom*
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line()
+```
+
+Línuritiði hér að ofan er mjög skrítið, því að það eru í raun tvær tölur í gögnunum fyrir hvert ár og hvert landssvæði, eitt fyrir hvort kynið. Í *geom_col* er það sjálfkrafa lagt saman, en ekki í *geom_line*. Einn möguleiki er að summera fyrirfram.
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line()
+```
+
+Þá er einnig hægt að hafa fleira en eitt geom:
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point()
+```
 
 
+## Theme og titlar
+
+Búið er að útbúa nýtt *theme* fyrir HMS. Auðvelt er að bæta því við:
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  theme_hms() +
+  theme(axis.text.x = element_text(family = "SetimoLight", face = "italic"))
+```
+
+
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  theme_hms() +
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption"
+  )
+```
 ## forcats
