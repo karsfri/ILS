@@ -6,7 +6,7 @@ output: html_notebook
 ```{r setup, include=FALSE,echo=FALSE}
 
 # set template
-source("https://github.com/karsfri/ILS/raw/master/theme_ils.R")
+source("https://github.com/karsfri/ILS/raw/master/theme_hms.R")
 theme_set_ils()
 
 library(DBI)

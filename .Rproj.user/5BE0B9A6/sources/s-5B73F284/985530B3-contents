@@ -644,7 +644,7 @@ pop_tidy %>%
   geom_line()
 ```
 
-Þá er einnig hægt að hafa fleira en eitt geom:
+Þá er einnig hægt að hafa fleira en eitt geom. Hér er t.d bæði notað *line* og *point*:
 
 ```{r}
 pop_tidy %>% 
@@ -683,7 +683,7 @@ pop_tidy %>%
 ```
 
 
-Búið er að útbúa nýtt *theme* fyrir HMS. Auðvelt er að bæta því við:
+Búið er að útbúa nýtt *theme* fyrir HMS en það má finna á github undir á (github/karsfri/ILS)["https://github.com/karsfri/ILS/raw/master/theme_hms.R"]. Því má bæta við með með sambærilegum hætti, þ.e. bæta við línunni *+ theme_ils()* við kóðann:
 
 ```{r}
 pop_tidy %>% 
@@ -704,6 +704,22 @@ pop_tidy %>%
     y = "Þetta er ekki lýsandi nafn á ás"
   )
 ```
+
+## Skalar
+
+### Litir
+
+### Ásar
+
+### Annað
+
+## Facets
+
+## Coords
+
+## Vista
+
+## Annotations
 
 
 
@@ -740,7 +756,7 @@ pop_tidy %>%
   geom_point() +
   theme_hms() +
   labs(
-    title = "Þetta er titill" %>% toupper(),
+    title = "Þetta er titill", #%>% toupper(),
     subtitle = "Þetta er undirtitill",
     caption = "Þetta er caption"
   ) +

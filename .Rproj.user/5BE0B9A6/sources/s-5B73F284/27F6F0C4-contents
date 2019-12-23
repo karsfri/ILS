@@ -4,38 +4,43 @@ library(tidyverse)
 windowsFonts(Setimo = windowsFont("Setimo"))
 windowsFonts(SetimoLight = windowsFont("Setimo Light"))
 
-blue <- "#11223a"
 
 # Colors for monthly report -----------------------------------------------
 
+blue <- "#11223a"
+red <- "#ff5028"
+color_main <- "#11223a"
+
+
+# we really need more colors. This is mixture of the new and the old palette
 palette_light <- c(
-  yellow = "#F3E074",
-  blue = "#82C2D3",
-  red = "#E48865",
-  gray = "#B1BFC2",
-  green = "#94BB75",
-  orange = "#EC8865",
-  purple = "#C56BA4"
+ "#F3E074", # blue - main color
+  "#82C2D3", # hms2
+  "#b3cfd1", # hms3
+  "#B1BFC2", # hms extra 1
+  "#00aec7", # hms extra 2
+  "#EC8865", # old
+  "#C56BA4"  # old
 )
 
 palette_medium <- c(
-  yellow = "#E4CC26",
-  blue = "#5990AE",
-  red =  "#CD4F3C",
-  dark_green = "#2D3737",
-  green = "#5DA666",
-  orange = "#DD9222",
-  purple = "#A55884"
+  "#F3E074", # blue - main color
+  "#82C2D3", # hms2
+  "#b3cfd1", # hms3
+  "#B1BFC2", # hms extra 1
+  "#00aec7", # hms extra 2
+  "#EC8865", # old
+  "#C56BA4"  # old
 )
 
 palette_dark <- c(
-  yellow = "#DBB419",
-  blue = "#2F769C",
-  red =  "#B9202D",
-  blackish = "#0C191D",
-  green = "#3E884E",
-  orange = "#BE7117",
-  purple = "#8C426B"
+  "#F3E074", # blue - main color
+  "#82C2D3", # hms2
+  "#b3cfd1", # hms3
+  "#B1BFC2", # hms extra 1
+  "#00aec7", # hms extra 2
+  "#EC8865", # old
+  "#C56BA4"  # old
 )
 
 # Palette for the montly reports - use for areas and columns
