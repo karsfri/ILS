@@ -219,11 +219,11 @@ theme_set_hms <- function(theme = theme_hms(), change_palettes = TRUE){
   if(change_palettes){
     
     scale_colour_discrete <- function(...) {
-      scale_colour_manual(..., values = palette_ils_darker %>% unname())
+      scale_colour_manual(..., values = palette_hms_darker %>% unname())
     }
     
     scale_fill_discrete <- function(...) {
-      scale_fill_manual(..., values = palette_ils)
+      scale_fill_manual(..., values = palette_hms)
     }
     
     assign("scale_colour_discrete", scale_colour_discrete, envir = .GlobalEnv)
@@ -235,10 +235,11 @@ theme_set_hms <- function(theme = theme_hms(), change_palettes = TRUE){
 
 # Common caption names ----------------------------------------------------
 
+cap_hms <- "Heimild: hagdeild Húsnæðis- og mannvirkjastofnunar"
 cap_thjodskra <- "Heimild: Þjóðskrá Íslands"
-cap_ils_thjodskra <- "Heimild: Þjóðskrá Íslands og hagdeild Íbúðalánasjóðs"
+cap_hms_thjodskra <- "Heimild: Þjóðskrá Íslands og hagdeild Húsnæðis- og mannvirkjastofnunar"
 cap_hagstofa <- "Heimild: Hagstofa Íslands"
-cap_ils_hagstofa <- "Heimild: Hagstofa Íslands og hagdeild Íbúðalánasjóðs"
+cap_hms_hagstofa <- "Heimild: Hagstofa Íslands og hagdeild Húsnæðis- og mannvirkjastofnunar"
 
 
 # read functions ----------------------------------------------------------

@@ -773,6 +773,28 @@ theme_set_hms()
 ```
 
 
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  # theme_hms() +
+  theme(
+    axis.text.x = element_text(angle = 90, color = "pink", face = "bold")
+  ) +
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption",
+    x = NULL, # Ef það á að sleppa label
+    y = "Þetta er ekki lýsandi nafn á ás"
+  ) 
+```
 ### Ásar
 
 ### Annað
