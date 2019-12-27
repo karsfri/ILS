@@ -734,6 +734,29 @@ pop_tidy %>%
 
 Athugið að *theme* fallið þarf að koma eftir *theme_hms*.
 
+Athugið að inní hms pakkanum er *theme_vertical_x* sem að setur labels á x-ás í 90° og lagar justification.
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  theme_hms() +
+  theme_vertical_x +
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption",
+    x = NULL, # Ef það á að sleppa label
+    y = "Þetta er ekki lýsandi nafn á ás"
+  )
+```
+
 ## Skalar
 
 Á meðan aes stjórnar hvaða breytur breyta mismunandi aspectum plotsins, þá stjórna *scale_* föllin því hvernig. Þau stjórna því hvernig ásar breytast, og hvaða litir eru notaðir.
@@ -808,19 +831,128 @@ pop_tidy %>%
   scale_fill_manual(values = c(palette_hms[1], red))
 ```
 
-
-
 ### Ásar
+
+Breyta má ásum með föllunum sem byrja á *scale_y_[type]* eða *scale_x_[type]*.
+
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption",
+    x = NULL, # Ef það á að sleppa label
+    y = "Þetta er ekki lýsandi nafn á ás"
+  ) +
+  scale_y_continuous(
+    breaks = seq(0, 5*10^5, by = 2.5*10^4), # Setja línubil í 25.000,
+    limits = c(0, 3 * 10 ^ 5), # Bilið á ásnum. Hægt að setja NA ef aðeins á að stjórna efri eða neðri mörkum,
+    labels = scales::label_comma(big.mark = ".", decimal.mark = ",") # sjá einnig accuracy og scale!
+  ) 
+
+
+
+```
+
+Vegna þess að kommur og punktar eru með öðrum hætti en í USA má nota föllin *label_isl*, *label_isk* og *label_percent* úr *hms* pakkanum.
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption",
+    x = NULL, # Ef það á að sleppa label
+    y = "Þetta er ekki lýsandi nafn á ás"
+  ) +
+  scale_y_continuous(
+    breaks = seq(0, 5*10^5, by = 2.5*10^4), # Setja línubil í 25.000,
+    limits = c(0, 3 * 10 ^ 5), # Bilið á ásnum. Hægt að setja NA ef aðeins á að stjórna efri eða neðri mörkum,
+    labels = label_isl() # fall úr hms pakkanum.
+  )
+
+
+```
+
 
 ### Annað
 
 ## Facets
 
-### Litir
+Samanburður getur stundum verið óskýr eða jafnvel villandi ef að margar línur eru á sama grafi. Þá getur oft verið gott að nota facets. Fallið *facet_wrap* er hugsað til þess að nota fyrir eina breytu á meðan *facet_grid* er hugsað fyrir eina eða tvær þar sem hver breyta er ekki í fleiri en einni röð eða einum dálki.
 
-### Ásar
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption",
+    x = NULL, # Ef það á að sleppa label
+    y = "Þetta er ekki lýsandi nafn á ás"
+  ) +
+  scale_y_continuous(
+    breaks = seq(0, 5*10^5, by = 2.5*10^4), # Setja línubil í 25.000,
+    limits = c(0, 3 * 10 ^ 5), # Bilið á ásnum. Hægt að setja NA ef aðeins á að stjórna efri eða neðri mörkum,
+    labels = label_isl() # fall úr hms pakkanum.
+  ) +
+  facet_wrap(~Landssvæði)
 
-### Annað
+
+```
+
+Ef að ásarnir mega vera vera misjafnir má notast við *scales* argumentið. Athugið að þá verð ég samt að taka út efri mörkin *limits* í *scale_y_continous*:
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption",
+    x = NULL, # Ef það á að sleppa label
+    y = "Þetta er ekki lýsandi nafn á ás"
+  ) +
+  scale_y_continuous(
+    # breaks = seq(0, 5*10^5, by = 2.5*10^4), # Setja línubil í 25.000,
+    limits = c(0, NA), # Bilið á ásnum. Hægt að setja NA ef aðeins á að stjórna efri eða neðri mörkum,
+    labels = label_isl() # fall úr hms pakkanum.
+  ) +
+  facet_wrap(~Landssvæði, scales = "free_y")
+
+
+```
 
 ## Coords
 

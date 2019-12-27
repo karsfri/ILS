@@ -111,16 +111,22 @@ theme_hms <- function(tms = 1){
 
 # Plot helper functions ---------------------------------------------------
 
-theme_flip <- function(color = gray, ...){
-  theme(
-    panel.grid.major.x = element_line(color = color, ...),
-    panel.grid.major.y = element_blank()
-  )
-}
-
 theme_vertical_x <- theme(
   axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1)
 )
+
+
+theme_flip <- function(color = gray, ...){
+  theme(
+    panel.grid.major.x = element_line(color = color, ...),
+    panel.grid.major.y = element_blank(),
+    axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1)
+  )
+}
+
+
+
+
 
 guides_off  <- function(){
   guides(fill = FALSE, color = FALSE, alpha = FALSE)
@@ -146,6 +152,9 @@ label_isk <- function(...) scales::label_dollar(prefix = "", suffix = " kr.", de
 label_point <- function(...) scales::label_dollar(decimal.mark = ",", big.mark = ".", ...)
 label_percent <- function(accuracy = 1, ...) scales::label_percent(accuracy = accuracy, decimal.mark = ",", big.mark = ".", ...)
 
+label_isl <- function(accuracy = 1, scale = 1, ...){
+  scales::label_comma(accuracy = accuracy, scale = scale, decimal.mark = ",", big.mark = ".", ...)
+} 
 
 # Save plot functions ----------------------------------------------------------
 
