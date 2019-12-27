@@ -1,0 +1,8 @@
+"0","pop_tidy <- pop %>% "
+"0","  gather("
+"0","    key = ""Landssvæði"","
+"0","    value = ""Fólksfjöldi"","
+"0","    Höfuðborgarsvæði:`Suðurland` # Tilgreina hvaða dálkum á að safna saman"
+"0","  )"
+"0",""
+"0","pop_tidy"

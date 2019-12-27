@@ -1,0 +1,4 @@
+"0","theme_set_hms()"
+"2","Error in scale_colour_discrete <<- function(...) { : 
+  cannot change value of locked binding for 'scale_colour_discrete'
+"

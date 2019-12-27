@@ -683,6 +683,8 @@ pop_tidy %>%
 ```
 
 
+Þemu stjórna heildarútliti á gröfum, svo sem litum á bakgrunni, leturgerð, lóðréttum og láréttum línum og svo lengi mætti telja. Sjá heildarlista í *?theme*.
+
 Búið er að útbúa nýtt *theme* fyrir HMS en það má finna á github undir á (github/karsfri/ILS)["https://github.com/karsfri/ILS/raw/master/theme_hms.R"]. Því má bæta við með með sambærilegum hætti, þ.e. bæta við línunni *+ theme_ils()* við kóðann:
 
 ```{r}
@@ -700,20 +702,88 @@ pop_tidy %>%
     title = "Þetta er titill",
     subtitle = "Þetta er undirtitill",
     caption = "Þetta er caption",
-    x = NULL,
+    x = NULL, # Ef það á að sleppa label
     y = "Þetta er ekki lýsandi nafn á ás"
   )
 ```
 
+Þótt að *theme_hms* virkar áægætlega í flestum tilfellum er stundum þörf til þess að bregða útaf. Þá er ekkert mál að bæta við öðru *theme* falli við plottið:
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  theme_hms() +
+  theme(
+    axis.text.x = element_text(angle = 90, color = "pink", face = "bold")
+  ) +
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption",
+    x = NULL, # Ef það á að sleppa label
+    y = "Þetta er ekki lýsandi nafn á ás"
+  )
+```
+
+Athugið að *theme* fallið þarf að koma eftir *theme_hms*.
+
 ## Skalar
 
+Á meðan aes stjórnar hvaða breytur breyta mismunandi aspectum plotsins, þá stjórna *scale_* föllin því hvernig. Þau stjórna því hvernig ásar breytast, og hvaða litir eru notaðir.
+
 ### Litir
+
+Gott er að nota *palette_hms* fyrir "stór" geom, svo sem svæðisrit og súlurit og *palette_hms_dark* fyrir "lítil" geom, svo sem punkta og línur.
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  theme_hms() +
+  theme(
+    axis.text.x = element_text(angle = 90, color = "pink", face = "bold")
+  ) +
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption",
+    x = NULL, # Ef það á að sleppa label
+    y = "Þetta er ekki lýsandi nafn á ás"
+  ) +
+  scale_color_manual(values = palette_hms_darker)
+```
+
+Með því að nota fallið *theme_set_hms* má yfirskrifa default thema og litaskema þannig að yfirleitt þarf ekki að taka það fram ef þetta fall er notað í byrjun. Athugið samt að það hefur *hliðarverkanir*.
+
+```{r}
+theme_set_hms()
+```
+
 
 ### Ásar
 
 ### Annað
 
 ## Facets
+
+### Litir
+
+### Ásar
+
+### Annað
 
 ## Coords
 

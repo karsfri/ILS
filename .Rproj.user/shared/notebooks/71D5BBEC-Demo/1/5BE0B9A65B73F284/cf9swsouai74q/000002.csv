@@ -1,0 +1,5 @@
+"0","leiga %>% "
+"0","  mutate("
+"0","    Dim_Timi_Utgefid = Dim_Timi_Utgefid %>% ymd(),"
+"0","    Dim_Timi_Thinglyst = Dim_Timi_Thinglyst %>% ymd()"
+"0","  )"

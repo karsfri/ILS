@@ -1,0 +1,9 @@
+"0","vnv <- read_hagstofan(""https://px.hagstofa.is:443/pxis/sq/7fa32768-b4c5-4499-a869-5b57c079d90a"", delim = ""\t"")"
+"2","Parsed with column specification:
+cols(
+  Ár = [32mcol_double()[39m,
+  Mánuður = [31mcol_character()[39m,
+  `Vísitala neysluverðs Vísitala` = [31mcol_character()[39m
+)
+"
+"0","vnv"

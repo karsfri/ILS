@@ -1,0 +1,6 @@
+"0","# Með endurteknu assignment er það læsilegra"
+"0",""
+"0","x2 <- log(x)"
+"0","x2 <- diff(x2)"
+"0","x2 <- exp(x2)"
+"0","x2 <- round(x2, 1)"

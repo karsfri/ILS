@@ -218,14 +218,16 @@ theme_set_hms <- function(theme = theme_hms(), change_palettes = TRUE){
   
   if(change_palettes){
     
-    scale_colour_discrete <<- function(...) {
+    scale_colour_discrete <- function(...) {
       scale_colour_manual(..., values = palette_ils_darker %>% unname())
     }
     
-    scale_fill_discrete <<- function(...) {
+    scale_fill_discrete <- function(...) {
       scale_fill_manual(..., values = palette_ils)
     }
     
+    assign("scale_colour_discrete", scale_colour_discrete, envir = .GlobalEnv)
+    assign("scale_fill_discrete", scale_fill_discrete, envir = .GlobalEnv)
   }
   
 }
