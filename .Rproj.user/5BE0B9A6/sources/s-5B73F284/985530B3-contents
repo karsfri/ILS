@@ -783,10 +783,6 @@ pop_tidy %>%
   ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
   geom_line() +
   geom_point() +
-  # theme_hms() +
-  theme(
-    axis.text.x = element_text(angle = 90, color = "pink", face = "bold")
-  ) +
   labs(
     title = "Þetta er titill",
     subtitle = "Þetta er undirtitill",
@@ -795,6 +791,25 @@ pop_tidy %>%
     y = "Þetta er ekki lýsandi nafn á ás"
   ) 
 ```
+
+Liturinn *#ff5028* hefur verið valinn sem áherslulitur, og hefur verið assign-aður undir *red*. 
+
+```{r}
+pop_tidy %>% 
+  filter(
+    Ár == 2018,
+    Kyn == "Karlar"
+    ) %>% 
+  mutate(
+    hbs = if_else(Landssvæði == "Höfuðborgarsvæði", "Illmenni", "Góðmenni")
+  ) %>% 
+  ggplot(aes(Landssvæði, Fólksfjöldi, fill = hbs)) +
+  geom_col() +
+  scale_fill_manual(values = c(palette_hms[1], red))
+```
+
+
+
 ### Ásar
 
 ### Annað

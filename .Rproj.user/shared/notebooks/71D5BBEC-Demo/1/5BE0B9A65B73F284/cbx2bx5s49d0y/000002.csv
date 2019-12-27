@@ -1,6 +1,0 @@
-"0","pop %>% "
-"0","  pivot_longer("
-"0","    cols = Höfuðborgarsvæði:`Suðurland`, "
-"0","    names_to = ""Landssvæði"","
-"0","    values_to = ""Fólksfjöldi"""
-"0","  )"

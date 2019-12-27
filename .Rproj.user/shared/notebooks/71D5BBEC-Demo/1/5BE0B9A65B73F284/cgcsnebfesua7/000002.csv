@@ -1,4 +1,0 @@
-"0",""
-"0","pop_tidy %>% "
-"0","  select(-Alls) %>% # Tók út ""Alls"" til þess að fá Karla og Konur í sömu röðum. "
-"0","  spread(Kyn, Fólksfjöldi)"

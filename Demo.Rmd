@@ -732,11 +732,88 @@ pop_tidy %>%
   )
 ```
 
-
+Athugið að *theme* fallið þarf að koma eftir *theme_hms*.
 
 ## Skalar
 
 Á meðan aes stjórnar hvaða breytur breyta mismunandi aspectum plotsins, þá stjórna *scale_* föllin því hvernig. Þau stjórna því hvernig ásar breytast, og hvaða litir eru notaðir.
+
+### Litir
+
+Gott er að nota *palette_hms* fyrir "stór" geom, svo sem svæðisrit og súlurit og *palette_hms_dark* fyrir "lítil" geom, svo sem punkta og línur.
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  theme_hms() +
+  theme(
+    axis.text.x = element_text(angle = 90, color = "pink", face = "bold")
+  ) +
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption",
+    x = NULL, # Ef það á að sleppa label
+    y = "Þetta er ekki lýsandi nafn á ás"
+  ) +
+  scale_color_manual(values = palette_hms_darker)
+```
+
+Með því að nota fallið *theme_set_hms* má yfirskrifa default thema og litaskema þannig að yfirleitt þarf ekki að taka það fram ef þetta fall er notað í byrjun. Athugið samt að það hefur *hliðarverkanir*.
+
+```{r}
+theme_set_hms()
+```
+
+
+```{r}
+pop_tidy %>% 
+  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded
+  group_by(Ár, Landssvæði) %>% 
+  summarise(
+    Fólksfjöldi = sum(Fólksfjöldi)
+  ) %>% 
+  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    title = "Þetta er titill",
+    subtitle = "Þetta er undirtitill",
+    caption = "Þetta er caption",
+    x = NULL, # Ef það á að sleppa label
+    y = "Þetta er ekki lýsandi nafn á ás"
+  ) 
+```
+
+Liturinn *#ff5028* hefur verið valinn sem áherslulitur, og hefur verið assign-aður undir *red*. 
+
+```{r}
+pop_tidy %>% 
+  filter(
+    Ár == 2018,
+    Kyn == "Karlar"
+    ) %>% 
+  mutate(
+    hbs = if_else(Landssvæði == "Höfuðborgarsvæði", "Illmenni", "Góðmenni")
+  ) %>% 
+  ggplot(aes(Landssvæði, Fólksfjöldi, fill = hbs)) +
+  geom_col() +
+  scale_fill_manual(values = c(palette_hms[1], red))
+```
+
+
+
+### Ásar
+
+### Annað
+
 ## Facets
 
 ### Litir
