@@ -1,0 +1,2 @@
+library(DBI)
+con <- dbConnect(odbc::odbc(), .connection_string = "Driver={SQL Server};", timeout = 10)

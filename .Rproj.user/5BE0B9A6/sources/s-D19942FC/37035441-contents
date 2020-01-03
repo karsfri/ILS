@@ -1,0 +1,187 @@
+Sys.setenv(LANGUAGE="is")
+Sys.setlocale("LC_TIME", "Icelandic")
+
+knitr::opts_chunk$set(
+  echo = FALSE,
+  fig.width = 18/2.54,
+  message = FALSE,
+  warning = FALSE,
+  include = TRUE,
+  dpi = 300,
+  dev.args=list(bg="transparent")
+)
+library(DBI)
+library(tidyverse)
+library(sf)
+library(seasonal)
+library(tsibble)
+library(lubridate)
+
+# # Kort
+# map_postnr <- sf::read_sf("../../../Hagdeild/R/data/maps/IS50V_MORK_24122018_ISN2004/IS50V_MORK_SHP/is50v_mork_postnumer_24122018.shp")
+# 
+# map_mork_umdaemi <- sf::read_sf("../../../Hagdeild/R/data/maps/IS50V_MORK_24122018_ISN2004/IS50V_MORK_SHP/is50v_mork_umdaemi_svaedi_24122018.shp")
+# 
+# transform_ice_map <- function(x, ...){
+#     sf::st_transform(x, crs = 4258, ...)
+# }
+
+# Theme
+source("../../R/theme/themes.R")
+
+# SQL tenging
+con <- dbConnect(odbc::odbc(), "HgrDev", timeout = 10, encoding = "WINDOWS-1252")
+
+
+read_hagstofan <- function(link, delim = ";",  na = ".",encoding = "WINDOWS-1252", ...){
+  read_delim(
+    link,
+    delim = delim,
+    na = na,
+    locale = locale(encoding = encoding, ...)
+  )
+}
+
+
+# Lesa inn ----------------------------------------------------------------
+
+# x1787
+# row_start <- seq(3, 1772, by = 18)
+# 
+# readxl::read_excel(
+#   "Gögn/Manadarleiguverd.xlsx",
+#   range = ""
+#   )
+
+
+leigusamn <- read_hagstofan("Gögn/leiguverd.csv")
+
+leigusamn %>% 
+  arrange(ar, man) %>% 
+  mutate(
+    timi = ymd(paste(ar, man, 1)),
+    quarter = (man-1) %/% 3 + 1,
+    quarter_timi = yq(paste(ar, quarter)),
+    man_fct = as_factor(man) %>% fct_rev(),
+    quarter_fct = quarter %>% as.factor(), 
+    # man = as_factor(man) %>% fct_rev()
+    ) %>% 
+  group_by(ar, quarter, quarter_fct, heiti) %>% 
+  summarise(
+    fjoldi = sum(fjoldi, na.rm = TRUE),
+    n = n()
+    ) %>% 
+  filter(n >= 3) %>% 
+  ungroup() %>% 
+  mutate(
+    quarter_fct = quarter_fct %>% fct_reorder(quarter, max),
+    heiti = heiti %>% fct_reorder(-fjoldi)
+    ) %>% 
+  ggplot(aes(x = ar, y = fjoldi, fill = quarter_fct)) +
+  geom_col(aes(alpha = quarter > 2), na.rm = TRUE, position = position_stack(reverse = TRUE)) +
+  facet_wrap(~heiti, scale = "free", nrow = 2) +
+  theme_ils +
+  scale_alpha_manual(values = c(0.6, 1)) +
+  scale_fill_manual(values = palette_ils) +
+  scale_y_continuous(labels = scales::format_format(big.mark = ".", decimal.mark = ",")) +
+  guides(alpha = FALSE, x = FALSE, y = FALSE)
+
+
+leigusamn %>% 
+  arrange(ar, man) %>% 
+  mutate(
+    timi = ymd(paste(ar, man, 1)),
+    quarter = (man-1) %/% 3 + 1,
+    quarter_timi = yq(paste(ar, quarter)),
+    man_fct = as_factor(man) %>% fct_rev(),
+    quarter_fct = quarter %>% as.factor(), 
+    # man = as_factor(man) %>% fct_rev()
+  ) %>% 
+  group_by(ar, quarter, quarter_fct, heiti) %>% 
+  summarise(
+    fjoldi = sum(fjoldi, na.rm = TRUE),
+    n = n()
+  ) %>% 
+  filter(n >= 3) %>% 
+  ungroup() %>% 
+  mutate(
+    quarter_fct = quarter_fct %>% fct_reorder(quarter, max),
+    heiti = heiti %>% fct_reorder(-fjoldi)
+  ) %>% 
+  ggplot(aes(x = ar, y = fjoldi, fill = quarter_fct)) +
+  geom_col(aes(alpha = quarter > 2), na.rm = TRUE, position = position_stack(reverse = TRUE)) +
+  facet_grid(heiti~., scale = "free", space = "free") +
+  theme_ils +
+  scale_alpha_manual(values = c(0.6, 1)) +
+  scale_fill_manual(values = palette_ils) +
+  scale_y_continuous(labels = scales::format_format(big.mark = ".", decimal.mark = ",")) +
+  guides(alpha = FALSE, x = FALSE, y = FALSE)
+
+# my_func <- function() tibble(x = 1, y = 2)
+# 
+# tibble(id = 1:10000) %>% 
+#   mutate(result = list(my_func())) %>% 
+#   unnest()
+
+df_fast_allt  %>% 
+  filter(!is.na(Landshlutaflokkun), Landshlutaflokkun != "Vantar") %>% 
+  mutate(Flatarmal = Flatarmal %>% cut_width(width = 50, boundary = 0)) %>% 
+  group_by(Landshlutaflokkun, Flatarmal, Stig) %>% 
+  summarise(n = n()) %>% 
+  group_by(Landshlutaflokkun, Stig) %>% 
+  mutate(n = n / sum(n, na.rm = TRUE) * 100,
+         n = round(n, digits = 2)) %>% 
+  spread(Stig, n) %>% View
+
+
+df %>% 
+  mutate(q = quarter(Tími)) %>% 
+  filter(`Uppruni-Tegund` == "Séreignarsparnaður - Greitt inn á lán") %>% 
+  group_by(Ár, `Uppruni-Tegund`, q) %>% 
+  summarise(
+    Tími = min(Tími),
+    Samtals = sum(Samtals),
+    Fjöldi = mean(Fjöldi)
+    ) %>% 
+  write_excel_csv2("eigid_fe_radstofun_unnid.csv")
+
+
+
+df %>% 
+  mutate(
+    Tími = as.Date(Tími),
+    `Uppruni-Tegund` = `Uppruni-Tegund` %>% str_replace(" - ", " -\n"),
+    Ár = Ár %>% as.character() %>% str_replace("2014", "'14"),
+    q = quarter(Tími)
+  ) %>% 
+  filter(Ár > 2014) %>% 
+  group_by(Ár, `Uppruni-Tegund`, q) %>% 
+  summarise(
+    Tími = min(Tími),
+    Samtals = sum(Samtals),
+    Fjöldi = mean(Fjöldi)
+  ) %>% 
+  mutate(Tími = Tími %>% label_q) %>% 
+  group_by(`Uppruni-Tegund`) %>% 
+  mutate(g = Samtals / lag(Samtals, 4) - 1) %>% 
+  ungroup() %>% 
+  select(-Samtals, -Fjöldi) %>% 
+  spread(`Uppruni-Tegund`, g) %>% View
+  
+
+df %>% 
+  mutate(
+    Tími = as.Date(Tími),
+    `Uppruni-Tegund` = `Uppruni-Tegund` %>% str_replace(" - ", " -\n"),
+    Ár = Ár %>% as.character() %>% str_replace("2014", "'14"),
+    q = quarter(Tími)
+  ) %>% 
+  filter(Ár > 2014) %>% 
+  group_by(Ár, q) %>% 
+  summarise(
+    Tími = min(Tími),
+    Samtals = sum(Samtals),
+    Fjöldi = mean(Fjöldi)
+  )  %>% 
+  ungroup() %>% 
+  mutate(g = Samtals / lag(Samtals, 4) - 1)

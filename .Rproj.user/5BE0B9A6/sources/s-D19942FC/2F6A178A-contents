@@ -1,0 +1,297 @@
+df_fast_allt %>% 
+  as_tibble() %>% 
+  filter(ByggingarstigByggingarfulltrua != 7) %>% 
+  arrange(Postnumer) %>% 
+  mutate(
+    Landshluti = fct_inorder(Landshluti),
+    NRUMDSYSLU = as.numeric(Landshluti)
+  ) %>% count(Landshluti, NRUMDSYSLU, Postnumer) %>% View
+  group_by(Landshluti) %>% 
+  summarise(fjoldi = n()) %>% 
+  rename(POSTNR = Postnumer)
+  
+  
+  
+map_mork_umdaemi <- sf::read_sf("../../../Hagdeild/R/data/maps/IS50V_MORK_24122018_ISN2004/IS50V_MORK_SHP/is50v_mork_umdaemi_svaedi_24122018.shp")  
+map_mork_domstolar <- sf::read_sf("../../../Hagdeild/R/data/maps/IS50V_MORK_24122018_ISN2004/IS50V_MORK_SHP/is50v_mork_domstolar_i_heradi_24122018.shp")  
+map_mork_kjordaemi <- sf::read_sf("../../../Hagdeild/R/data/maps/IS50V_MORK_24122018_ISN2004/IS50V_MORK_SHP/is50v_mork_kjordaemi_24122018.shp")  
+map_mork_logr <- sf::read_sf("../../../Hagdeild/R/data/maps/IS50V_MORK_24122018_ISN2004/IS50V_MORK_SHP/is50v_mork_logregluumdaemi_24122018.shp")  
+map_mork_sott <- sf::read_sf("../../../Hagdeild/R/data/maps/IS50V_MORK_24122018_ISN2004/IS50V_MORK_SHP/is50v_mork_sottvarnaumdaemi_24122018.shp")  
+map_mork_umdaemi <- sf::read_sf("../../../Hagdeild/R/data/maps/IS50V_MORK_24122018_ISN2004/IS50V_MORK_SHP/is50v_mork_umdaemi_svaedi_24122018.shp")  
+map_mork_umdaemi_fl <- sf::read_sf("../../../Hagdeild/R/data/maps/IS50V_MORK_24122018_ISN2004/IS50V_MORK_SHP/is50v_mork_umdaemi_flakar_24122018.shp")  
+
+
+map_mork_umdaemi$UMDAEMISYS
+map_mork_domstolar$NAFNFITJU
+map_mork_kjordaemi$NAFNFITJU
+map_mork_logr$NAFNFITJU
+map_mork_sott$NAFNFITJU
+map_mork_umdaemi$UMDAEMISYS
+map_mork_umdaemi_fl$UMDAEMISYS
+
+
+dict <- c(
+  "Austurland" = "Umdæmi sýslumannsins á Austurlandi", 
+  "Höfuðborgarsvæði" = "Umdæmi sýslumannsins á höfuðborgarsvæðinu", 
+  "Norðausturland" = "Umdæmi sýslumannsins á Norðurlandi eystra", 
+  "Norðvesturland" =  "Umdæmi sýslumannsins á Norðurlandi vestra", 
+  "Suðurland" = "Umdæmi sýslumannsins á Suðurlandi", 
+  "Suðurnes" = "Umdæmi sýslumannsins á Suðurnesjum",
+  "Vantar" = NA,
+  "Vestfirðir" = "Umdæmi sýslumannsins á Vestfjörðum", 
+  "Vesturland" = "Umdæmi sýslumannsins á Vesturlandi" 
+  )
+
+dict_rev <- names(dict)
+names(dict_rev) <- dict
+
+
+map_mork_umdaemi %>% left_join(
+  df_fast_allt %>% 
+    filter(ByggingarstigByggingarfulltrua != 7) %>% 
+    mutate(UMDAEMISYS = Landshluti %>% as_factor %>% fct_recode(!!!dict_rev)) %>% 
+    as_tibble() %>% 
+    group_by(UMDAEMISYS) %>% 
+    summarise(fjoldi = n())
+)
+
+
+df_fast_allt %>% 
+  group_by(Landshlutaflokkun, SerbyliFjolbyli, Stig) %>% 
+  summarise(
+    fjoldi = n()
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    Landshlutaflokkun = Landshlutaflokkun %>% str_wrap(12) %>% fct_reorder(-fjoldi, sum),
+    SerbyliFjolbyli = SerbyliFjolbyli %>% str_wrap(12) %>% fct_reorder(-fjoldi, sum)
+  ) %>% 
+  filter(Landshlutaflokkun != "Vantar") %>%
+  group_by(Landshlutaflokkun, Stig) %>% 
+  mutate(rat = fjoldi / sum(fjoldi)) %>% View
+  ggplot(aes(x = Stig, y = rat, fill = SerbyliFjolbyli)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent_format(big.mark = ".", decimal.mark = ",")) +
+  scale_fill_manual(values = palette_ils, guide = guide_legend(ncol = 2)) +
+  theme_ils +
+  labs(
+    x = NULL, y = NULL
+  ) +
+  facet_wrap(~Landshlutaflokkun, strip.position = "left") +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1),
+    strip.text.y = element_text(angle = -90, hjust = 0)
+  ) 
+
+ggsave_word("fjolbyli_serbyli.png", width = 7, height = 7, scale = 1)
+
+
+ny_skraningar <- read_hagstofan("https://px.hagstofa.is:443/pxis/sq/61bfd0c0-44e8-4098-b419-cec5eb6c3503") 
+
+ny_skraningar %>% 
+  filter(!is.na(`Nýskráningar fyrirtækja 2008-2019`)) %>% 
+  group_by(Ár, Mánuður, Atvinnugrein) %>% 
+  summarise(fjoldi = sum(`Nýskráningar fyrirtækja 2008-2019`, na.rm = TRUE)) %>% 
+  mutate(timi = lubridate::ymd(paste(Ár, Mánuður, 01))) %>% 
+  arrange(timi) %>% 
+  group_by(Ár) %>% 
+  mutate(
+    uppsafnad = cumsum(fjoldi),
+    Mánuður = lubridate::month(timi)
+    ) %>% 
+  ggplot(aes(x = lubridate::month(timi), y = uppsafnad, color = Ár %>% as.factor())) +
+  geom_line() +
+  ggrepel::geom_text_repel(
+    aes(x = Mánuður + 0.1, y = uppsafnad, group = Ár, label = Ár),
+    data = . %>% group_by(Ár) %>% filter(Mánuður == last(Mánuður)),
+    nudge_x = 0.4
+  ) +
+  theme_ils +
+  scale_x_continuous(breaks = 1:12, labels = month_names) +
+  scale_color_manual(values = c(palette_ils_darker, palette_ils_darker, palette_ils_darker)) +
+  labs(
+    y = "Fjöldi gjaldþrota"
+  ) +
+  guides(color = FALSE)
+
+
+
+flutn %>% 
+  filter(Ár %in% c(2003, 2008, 2013, 2018)) %>% 
+  rename(fjoldi = 6) %>% 
+  separate(Brottflutningssvæði, into = c("Brottflutningssvæði", "henda"), sep = " - ") %>% 
+  separate(Aðflutningssvæði, into = c("Aðflutningssvæði", "henda2"), sep = " - ") %>% 
+  mutate(
+    Aðflutningssvæði = Aðflutningssvæði %>% as_factor(),
+    Brottflutningssvæði = Brottflutningssvæði %>% as_factor()
+  ) %>% 
+  ggplot(aes(axis1 = Brottflutningssvæði, axis2 = Aðflutningssvæði, y = fjoldi)) +
+  geom_alluvium(aes(fill = Aðflutningssvæði)) +
+  geom_stratum(width = 1/2) +
+  geom_text(stat = "stratum", label.strata = TRUE, size = 1.8) +
+  scale_x_discrete(limits = c("Brottflutningssvæði", "Aðflutningssvæði"), expand = c(0.02, 0.02)) +
+  scale_fill_manual(values = c(palette_ils, palette_ils_darker)) +
+  theme_ils +
+  scale_y_continuous(labels = scales::format_format(big.mark = ".", decimal.mark = ",")) +
+  theme(
+    legend.direction = "vertical",
+    # panel.grid.major.y = element_blank(),
+    legend.position = "right"
+  ) +
+  facet_grid(~Ár) +
+  labs(
+    y = NULL
+  )
+
+ggsave_word("prufa_alluvial.png", width = 25, scale = 1.2)
+
+dict_svaedi <- c(
+  "Höfuðborgarsvæði" = "Höfuðborgarsvæði", 
+  "Landsbyggðin" = "Suðurnes",
+  "Landsbyggðin" = "Vesturland", 
+  "Landsbyggðin" = "Vestfirðir",
+  "Landsbyggðin" = "Norðurland vestra", 
+  "Landsbyggðin" = "Norðurland eystra",
+  "Landsbyggðin" = "Austurland", 
+  "Landsbyggðin" = "Suðurland", 
+  "Landsbyggðin" = "Ótilgreint innanlands",
+  "Útlönd" = "Útlönd"
+  )
+
+
+flutn %>% 
+  filter(Ár %in% c(2003, 2008, 2013, 2018)) %>% 
+  rename(fjoldi = 6) %>% 
+  separate(Brottflutningssvæði, into = c("Brottflutningssvæði", "henda"), sep = " - ") %>% 
+  separate(Aðflutningssvæði, into = c("Aðflutningssvæði", "henda2"), sep = " - ") %>% 
+  mutate(
+    Aðflutningssvæði = Aðflutningssvæði %>% as_factor() %>% fct_recode(!!!dict_svaedi),
+    Brottflutningssvæði = Brottflutningssvæði %>% as_factor() %>% fct_recode(!!!dict_svaedi)
+  ) %>% 
+  ggplot(aes(axis1 = Brottflutningssvæði, axis2 = Aðflutningssvæði, y = fjoldi)) +
+  geom_alluvium(aes(fill = Aðflutningssvæði)) +
+  geom_stratum(width = 1/2) +
+  geom_text(stat = "stratum", label.strata = TRUE, size = 1.8) +
+  scale_x_discrete(limits = c("Brottflutningssvæði", "Aðflutningssvæði"), expand = c(0.02, 0.02)) +
+  scale_fill_manual(values = c(palette_ils, palette_ils_darker)) +
+  theme_ils +
+  scale_y_continuous(labels = scales::format_format(big.mark = ".", decimal.mark = ",")) +
+  theme(
+    legend.direction = "vertical",
+    # panel.grid.major.y = element_blank(),
+    legend.position = "right"
+  ) +
+  facet_grid(~Ár) +
+  labs(
+    y = NULL
+  )
+
+ggsave_word("prufa_alluvial_hbs_landsb.png", width = 25, scale = 1.2)
+
+
+
+
+byggt <- byggt %>% 
+  gather(ar, byggt, -iso, -Country, convert = TRUE) %>% 
+  mutate(byggt = as.numeric(byggt))
+
+pop <- pop %>% 
+  gather(ar, pop, -`GEO/TIME`, -iso, convert = TRUE)
+
+isl <- isl %>% 
+  gather(ar, henda, -Land, -iso, convert = TRUE)
+
+byggt %>% 
+  left_join(pop) %>% 
+  left_join(isl) %>% 
+  mutate(per = byggt / pop * 10000) %>% 
+  group_by(ar) %>% 
+  mutate(
+    Ísland = if_else(Land == "Ísland", "Ísland", "Annað"),
+    isl = sum(per * (Land == "Ísland")),
+    Land = Land %>% fct_reorder(-per),
+    timi = ymd(paste(ar, 1, 1))
+    ) %>% 
+  # filter(Land != "Ísland") %>% 
+  ggplot(aes(x = timi, y = per, fill = Ísland)) +
+  geom_col(position = position_dodge(width = 1), width = 200) +
+  # geom_line(aes(y = isl, color = (Land == "Ísland"))) +
+  # geom_col(aes(y = isl), fill = "gray80", alpha = 0.2, color = "gray40") +
+  theme_ils +
+  scale_fill_manual(values = palette_ils) +
+  scale_x_date(date_breaks = "2 years", date_labels = "'%y", limits = c(ymd(paste(2005,01,01)), ymd(paste(2018,01,01)))) +
+  facet_grid(~Land)
+
+# byggt %>% 
+#   left_join(pop) %>% 
+#   left_join(isl) %>% 
+#   arrange(Land, ar) %>% 
+#   group_by(Land) %>% 
+#   mutate(
+#     popdiff = pop / lag(pop) - 1,
+#     byggdiff = byggt / lag(pop) 
+#     ) %>% 
+#   filter(!is.na(byggdiff)) %>% 
+#   group_by(ar) %>% 
+#   mutate(
+#     Ísland = if_else(Land == "Ísland", "Ísland", "Annað"),
+#     isl = sum(byggdiff * (Land == "Ísland")),
+#     timi = ymd(paste(ar, 1, 1))
+#   ) %>% 
+#   ungroup() %>% 
+#   mutate(
+#     Land = Land %>% fct_reorder(-byggdiff)
+#   ) %>% 
+#   # filter(Land != "Ísland") %>% 
+#   ggplot(aes(x = timi, y = byggdiff, fill = Ísland)) +
+#   geom_col(position = position_dodge(width = 1), width = 200) +
+#   geom_line(aes(y = popdiff)) +
+#   # geom_line(aes(y = isl, color = (Land == "Ísland"))) +
+#   # geom_col(aes(y = isl), fill = "gray80", alpha = 0.2, color = "gray40") +
+#   theme_ils +
+#   scale_fill_manual(values = palette_ils) +
+#   scale_x_date(date_breaks = "2 years", date_labels = "'%y", limits = c(ymd(paste(2005,01,01)), ymd(paste(2018,01,01)))) +
+#   facet_grid(~Land)
+
+
+
+
+kaupverd <- readxl::read_xlsx("Gögn/visitala.xlsx", skip = 2)
+leiguverd <- readxl::read_xls("Gögn/leiguvisitala.xls", skip = 2)
+launavisitala <- read_delim(
+  delim = ";", 
+  "https://px.hagstofa.is:443/pxis/sq/efa21766-0fa8-4d76-b22d-0b18d20adcdf",
+  locale = locale(encoding = "WINDOWS-1252", decimal_mark = ".")
+)
+
+launavisitala <- launavisitala %>% 
+  rename(
+    Launavísitala = Vísitala, 
+    mánuður = Mánuður
+  ) %>%
+  mutate(
+    Launavísitala = as.double(Launavísitala),
+    timi = ymd(paste(Ár, mánuður, 01))
+  )
+
+kaupverd %>% 
+  rename(Ár = 1, mánuður = 2) %>% 
+  fill(Ár, .direction = "updown") %>% 
+  select(Íbúðarverð = `Íbúðarhúsnæði alls`, Ár, mánuður) %>% 
+  left_join(leiguverd %>% rename(Leiguverð = Vísitala)) %>% 
+  mutate(timi = ymd(paste(Ár, mánuður, 01))) %>% 
+  left_join(launavisitala %>% select(-Ár,-mánuður), by = "timi") %>% 
+  filter(Ár >= 2012) %>% 
+  group_by(Ár, mánuður, timi) %>% 
+  gather(var, val, -Ár, -mánuður, -timi) %>% 
+  group_by(var) %>% 
+  arrange(timi) %>% 
+  mutate(val = val / lag(val, 12) - 1) %>% 
+  filter(!is.na(val)) %>% 
+  ggplot(aes(x = timi,  y = val, color = var)) +
+  geom_line() +
+  geom_point() +
+  theme_ils +
+  scale_color_manual(values = palette_ils) +
+  scale_y_continuous(labels = scales::percent_format(big.mark = ".", decimal.mark = ",", accuracy = 1))
+

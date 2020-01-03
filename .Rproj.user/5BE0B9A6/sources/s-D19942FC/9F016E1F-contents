@@ -1,0 +1,588 @@
+---
+title: "Byggingageirinn"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+---
+
+# Setup
+
+```{r setup, include=FALSE,echo=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	fig.width = 14 / 2.54,
+	fig.asp = 8 / 16,
+	message = FALSE,
+	warning = FALSE,
+	include = TRUE,
+	dpi = 600,
+	dev = "png",
+	dev.args=list(bg="transparent"),
+	out.width = "100%"
+)
+
+library(DBI)
+library(tidyverse)
+library(sf)
+library(seasonal)
+library(tsibble)
+library(lubridate)
+library(here)
+library(dbplyr)
+
+
+
+# Theme
+source("https://github.com/karsfri/ILS/raw/master/theme_ils.R")
+theme_set_ils()
+
+# SQL tenging
+
+con <- dbConnect(
+  drv = odbc::odbc(),
+  dsn = "HgrDwh_Prod", 
+  timeout = 10, 
+  # database = "HgrProd",
+  encoding = "WINDOWS-1252"
+  )
+
+# con <- dbConnect(
+#   drv = odbc::odbc(),
+#   dsn = "HgrProd", 
+#   timeout = 10, 
+#   # database = "HgrProd",
+#   encoding = "WINDOWS-1252"
+#   )
+
+
+
+read_hagstofan <- function(link, delim = ";",  na = ".",encoding = "WINDOWS-1252", ...){
+  read_delim(
+    link,
+    delim = delim,
+    na = na,
+    locale = locale(encoding = encoding, ...)
+  )
+}
+```
+
+```{r}
+# df_prufa <- tbl(con, dbplyr::in_schema("dwh", "Fact_Kaupsamningar_Stakar"))
+sql_CS <- tbl(con, dbplyr::in_schema("dwh", "Fact_Visitolur"))
+sql_CS_Dim <- tbl(con, dbplyr::in_schema("dwh", "Dim_Visitolur"))
+```
+
+```{r}
+df_CS <- sql_CS %>% 
+  filter(dim_visitolur == "1") %>% 
+  rename(Fasteignaverð = Visitala) %>% 
+  collect() %>% 
+  mutate(
+    dim_timi = ymd(dim_timi)
+    , ByggingarAr = year(dim_timi)
+    ) %>% 
+  filter(month(dim_timi) == 6) %>% 
+  select(ByggingarAr, Landssvaedi, Fasteignaverð)
+
+```
+
+
+```{sql, connection = con, output.var = "df_fast_allt"}
+ 
+SELECT 
+ Dim_Timi_Snapshot,
+ Landshlutaflokkun, 
+ Landshluti,
+ Sveitarfelag,
+ SveitarfelagsNumer,
+ f.FjoldiHerbergja,
+ f.Flatarmal,
+ Postnumer,
+ HofudborgLandsbyggd,
+ Matsstig, 
+ MatsstigLysing,
+ SerbyliFjolbyli,
+ Fastanumer,
+ Breiddargrada, 
+ Lengdargrada
+FROM 
+  dwh.Fact_Fasteignir f
+    INNER JOIN dwh.Dim_Fasteignir dfst
+        ON f.Dim_Fasteignir = dfst.Dim_Fasteignir_sk
+WHERE 
+ ErIbud = 1 AND Dim_Timi_Snapshot = '20191019' AND [Matsstig] BETWEEN '1' AND '7'
+
+```
+
+```{sql, connection = con, output.var = "df_byggt"}
+ 
+SELECT 
+ Landshluti, 
+ ByggingarstigByggingarfulltruaLysing, 
+ ByggingarstigByggingarfulltrua, 
+ ByggingarAr,
+ count(*) AS fjoldi
+FROM 
+  dwh.Fact_Fasteignir f
+    INNER JOIN dwh.Dim_Fasteignir dfst
+        ON f.Dim_Fasteignir = dfst.Dim_Fasteignir_sk
+WHERE 
+ ErIbud = 1  AND [Matsstig] BETWEEN '1' AND '7'
+GROUP BY 
+ Landshluti,  
+ ByggingarAr,
+ ByggingarstigByggingarfulltrua, 
+ ByggingarstigByggingarfulltruaLysing
+
+
+```
+
+```{r}
+df_pop <- read_hagstofan("https://px.hagstofa.is:443/pxis/sq/1d99f516-fc3a-40d2-abbf-983a037525fd")
+
+dict_landshlutar <- c(
+  "Norðausturland" = "Norðurland eystra",
+  "Norðvesturland" = "Norðurland vestra"
+)
+
+df_pop_visitala <- df_pop %>% 
+  rename(
+    Landshluti = Sveitarfélag,
+    pop = 5
+    ) %>% 
+  mutate(Landshluti = Landshluti %>% fct_recode(!!!dict_landshlutar)) %>% 
+  filter(Ár >= 2008) %>% 
+  group_by(Landshluti) %>% 
+  mutate(pop = pop / first(pop) * 100) %>% 
+  rename(ByggingarAr = Ár)
+```
+
+
+```{sql, connection = con, output.var = "kaupverd"}
+
+SELECT 
+      [Dim_Timi_Utgefid]
+      ,[Dim_Timi_Thinglyst]
+      ,[Dim_Fasteignir]
+      ,[Faerslunumer]
+      ,[Kaupverd]
+      ,[Kaupverd_nuvirdi]
+      ,[FjoldiFasteigna]
+      ,[FjoldiMatseininga]
+      ,[OnothaefurSamningur]
+      ,[AuglystDags]
+      ,[AuglystSoluverd]
+      ,[Landshluti]
+      ,[Landshlutaflokkun]
+      ,[HofudborgLandsbyggd]
+      ,[SerbyliFjolbyli]
+      ,[FjoldiHerbergja]
+      ,[SeltYfirAuglystuSoluverdi]
+      ,[SeltAAuglystuSoluverdi]
+      ,[SeltUndirAuglystuSoluverdi]
+      ,f.[LOAD_DATE]
+      ,f.[RECORD_SOURCE]
+      ,f.[ETL_ID]
+  FROM 
+    [HgrDwh].[dwh].[Fact_Kaupsamningar_Stakar] f 
+        INNER JOIN dwh.Dim_Timi dtim 
+            ON f.Dim_Timi_Utgefid = dim_timi_sk 
+        JOIN dwh.Dim_Fasteignir dfst 
+		    ON f.Dim_Fasteignir = dfst.Dim_Fasteignir_sk
+ WHERE 
+    dtim.ar > 2007
+ORDER BY 
+ Dim_Timi_Utgefid ASC
+```
+
+
+```{r}
+vnv <- read_hagstofan("https://px.hagstofa.is:443/pxis/sq/7fa32768-b4c5-4499-a869-5b57c079d90a", delim = "\t")
+
+vnv <- vnv %>% 
+  mutate(ByggingarAr = ymd(paste(Ár, Mánuður, 01))) %>% 
+  mutate(vnv = `Vísitala neysluverðs Vísitala` %>% as.numeric()) %>% 
+  drop_na(vnv)
+
+last_vnv <- vnv %>% 
+  slice(n()) %>% .$vnv
+
+kaupverd <- kaupverd %>% 
+  as_tibble() %>% 
+  mutate(ByggingarAr = ymd(Dim_Timi_Utgefid)) %>% 
+  mutate(ByggingarAr = floor_date(ByggingarAr, unit = "1 months")) %>% 
+  left_join(vnv) %>% 
+  mutate(
+    Kaupverd = Kaupverd / vnv * last_vnv,
+    ByggingarAr = floor_date(ByggingarAr, unit = "12 months")
+  ) %>% 
+  group_by(ByggingarAr, Landshluti) %>% 
+  summarise(
+    val = mean(Kaupverd, na.rm = TRUE) 
+  ) %>% 
+  group_by(Landshluti) %>% 
+  mutate(
+    val = val / first(val) * 100,
+    var = "Kaupverð"
+  ) %>% 
+  filter(Landshluti != "Vantar")
+```
+
+
+```{r}
+p2 <- df_byggt %>% 
+  as_tibble() %>% 
+  mutate(
+    ByggingarAr = ByggingarAr %>% as.double(),
+    ByggingarAr = if_else(ByggingarAr < 2008, 2008, ByggingarAr)
+    # ByggingarAr = if_else(is.na(ByggingarAr), 2020, ByggingarAr)
+  ) %>% 
+  # filterinn tekur úr 3194 íbúðir en skilur eftir 140.481
+  filter(
+    !(ByggingarAr < 2019 & ByggingarstigByggingarfulltrua != "7"),
+    Landshluti != "Vantar"
+  ) %>% 
+  arrange(Landshluti, ByggingarAr) %>% 
+  mutate(stig = if_else(ByggingarstigByggingarfulltrua == "7", "Fullgert", "Í byggingu")) %>% 
+  group_by(Landshluti, ByggingarAr, stig) %>% 
+  summarise(fjoldi = sum(fjoldi, na.rm = TRUE)) %>% 
+  group_by(Landshluti, stig) %>% 
+  mutate(fjoldi = cumsum(fjoldi)) %>% 
+  group_by(Landshluti, ByggingarAr) %>% 
+  mutate(
+    `Í byggingu` = sum((stig == "Í byggingu") * fjoldi, na.rm = TRUE) + fjoldi,
+    ) %>% 
+  filter(stig != "Í byggingu") %>% 
+  group_by(Landshluti) %>% 
+  mutate(
+    `Í byggingu` = `Í byggingu` / first(fjoldi) * 100,
+    fjoldi = fjoldi / first(fjoldi) * 100
+    )  %>% 
+  mutate(`Í byggingu` = if_else(ByggingarAr == 2019, `Í byggingu`, NA_real_)) %>% 
+  left_join(df_pop_visitala) %>% 
+  # left_join(df_CS) %>%
+  gather(var, val, pop, fjoldi) %>% 
+    ungroup() %>% 
+  mutate(
+      ByggingarAr = ymd(paste(ByggingarAr, 01, 01)),
+  ) %>% 
+  bind_rows(kaupverd) %>% 
+    mutate(
+      var = fct_recode(var, "Íbúafjöldi" = "pop", "Fjöldi íbúða" = "fjoldi"),
+      Landshluti = Landshluti %>% fct_recode("Höfuðborgar-\nsvæðið" = "Höfuðborgarsvæði") %>% fct_inorder()
+      ) %>% 
+    # group_by(Landshluti, ByggingarAr) %>% 
+    # mutate(ymin = first(val), ymax = last(val), haerra = ymin <= ymax) %>% 
+    # ungroup() %>% 
+  
+  ggplot(aes(x = ByggingarAr, y = val, color = var, fill = var)) +
+  # geom_point(aes(y = `Í byggingu`), alpha = 0.5, show.legend = FALSE, color = palette_ils_darker[3]) +
+  geom_hline(yintercept = 100) +
+  geom_line() +
+  # geom_area(alpha = 0.3) +
+  geom_point(size = 0.8) +
+    # geom_ribbon(aes(ymax = ymax, ymin = ymin), alpha = 0.2, color = NA, show.legend = FALSE) +
+    # geom_area(alpha = 0.2, position = position_dodge()) +
+  theme_ils() +
+    scale_x_date(date_breaks = "2 years", date_labels = "'%y") +
+  facet_grid(var~Landshluti, scale = "free_y") +
+  scale_y_continuous(labels = scales::label_comma(big.mark = ".", decimal.mark = ",")) +
+    # coord_cartesian(ylim = c(70, 180)) +
+  labs(
+    title = "Þróun á fjölda íbúða og íbúa eftir landshlutum",
+    subtitle = "Vísitala (2008 = 100)", 
+    caption = "Heimild: Hagstofa Íslands, Þjóðskrá Íslands og Íbúðalánasjóður",
+    y = NULL,
+    x = NULL
+  )
+
+p2
+
+ggsave_both("ibudir_pop")
+
+
+
+```
+
+```{r}
+df_byggt %>% 
+  as_tibble() %>% 
+  mutate(
+    ByggingarAr = ByggingarAr %>% as.double(),
+    ByggingarAr = if_else(ByggingarAr < 2008, 2008, ByggingarAr)
+    # ByggingarAr = if_else(is.na(ByggingarAr), 2020, ByggingarAr)
+  ) %>% 
+  # filterinn tekur úr 3194 íbúðir en skilur eftir 140.481
+  filter(
+    !(ByggingarAr < 2019 & ByggingarstigByggingarfulltrua != "7"),
+    Landshluti != "Vantar"
+  ) %>% 
+  arrange(Landshluti, ByggingarAr) %>% 
+  mutate(stig = if_else(ByggingarstigByggingarfulltrua == "7", "Fullgert", "Í byggingu")) %>% 
+  group_by(Landshluti, ByggingarAr, stig) %>% 
+  summarise(fjoldi = sum(fjoldi, na.rm = TRUE)) %>% 
+  group_by(Landshluti, stig) %>% 
+  mutate(fjoldi = cumsum(fjoldi)) %>% 
+  group_by(Landshluti, ByggingarAr) %>% 
+  mutate(
+    `Í byggingu` = sum((stig == "Í byggingu") * fjoldi, na.rm = TRUE) + fjoldi,
+    ) %>% 
+  filter(stig != "Í byggingu") %>% 
+  group_by(Landshluti) %>% 
+  # mutate(
+  #   `Í byggingu` = `Í byggingu` / first(fjoldi) * 100,
+  #   fjoldi = fjoldi / first(fjoldi) * 100
+  #   )  %>% 
+  # mutate(`Í byggingu` = if_else(ByggingarAr == 2019, `Í byggingu`, NA_real_)) %>% 
+  left_join(df_pop_visitala) %>% 
+  # left_join(df_CS) %>%
+  gather(var, val, pop, fjoldi) %>% 
+    ungroup() %>% 
+  mutate(
+      ByggingarAr = ymd(paste(ByggingarAr, 01, 01)),
+  ) %>% 
+  bind_rows(kaupverd) %>% 
+    mutate(
+      var = fct_recode(var, "Íbúafjöldi" = "pop", "Fjöldi íbúða" = "fjoldi"),
+      Landshluti = Landshluti %>% fct_recode("Höfuðborgar-\nsvæðið" = "Höfuðborgarsvæði") %>% fct_inorder()
+      ) %>% 
+  select(Landshluti, ByggingarAr, var, val) %>% 
+  spread(var, val) %>% 
+  View
+```
+
+
+```{r}
+df_pop <- df_pop %>% 
+  rename(
+    Landshluti = Sveitarfélag,
+    pop = 5
+    ) %>% 
+  mutate(Landshluti = Landshluti %>% fct_recode(!!!dict_landshlutar)) %>% 
+  filter(Ár >= 2008) %>% 
+  group_by(Landshluti) %>% 
+  rename(ByggingarAr = Ár)
+```
+
+
+```{r}
+p1 <- df_byggt %>% 
+  as_tibble() %>% 
+  mutate(
+    ByggingarAr = ByggingarAr %>% as.double(),
+    ByggingarAr = if_else(ByggingarAr < 2008, 2008, ByggingarAr)
+    # ByggingarAr = if_else(is.na(ByggingarAr), 2020, ByggingarAr)
+  ) %>% 
+  # filterinn tekur úr 3194 íbúðir en skilur eftir 140.481
+  filter(
+    !(ByggingarAr < 2019 & ByggingarstigByggingarfulltrua != "7"),
+    Landshluti != "Vantar"
+  ) %>% 
+  arrange(Landshluti, ByggingarAr) %>% 
+  mutate(stig = if_else(ByggingarstigByggingarfulltrua == "7", "Fullgert", "Í byggingu")) %>% 
+  group_by(Landshluti, ByggingarAr, stig) %>% 
+  summarise(fjoldi = sum(fjoldi, na.rm = TRUE)) %>% 
+  group_by(Landshluti, stig) %>% 
+  mutate(fjoldi = cumsum(fjoldi)) %>% 
+  group_by(Landshluti, ByggingarAr) %>% 
+  mutate(
+    `Í byggingu` = sum((stig == "Í byggingu") * fjoldi, na.rm = TRUE) + fjoldi,
+    ) %>% 
+  filter(stig != "Í byggingu") %>% 
+  group_by(Landshluti) %>% 
+  mutate(`Í byggingu` = if_else(ByggingarAr == 2019, `Í byggingu`, NA_integer_)) %>% 
+  left_join(df_pop) %>% 
+  mutate(
+    rat = fjoldi / pop,
+    rat2 = `Í byggingu` / pop
+    ) %>% 
+    ungroup() %>% 
+    mutate(
+      # var = fct_recode(var, "Íbúafjöldi" = "pop", "Fjöldi íbúða" = "fjoldi"),
+      ByggingarAr = ymd(paste(ByggingarAr, 01, 01)),
+      Landshluti = Landshluti %>% 
+        fct_recode("Höfuðborgar-\nsvæðið" = "Höfuðborgarsvæði") %>% 
+        fct_infreq()
+      ) %>% 
+    group_by(Landshluti, ByggingarAr) %>% 
+    ungroup() %>% 
+  
+  ggplot(aes(x = ByggingarAr, y = rat, color = Landshluti, fill = Landshluti)) +
+  geom_point(show.legend = FALSE, size = 1) +
+  geom_line() +
+  # geom_col(position = position_dodge(), width = 1) +
+    # geom_ribbon(aes(ymax = ymax, ymin = ymin, fill = haerra), alpha = 0.2, color = NA, show.legend = FALSE) +
+    # geom_area(alpha = 0.2, position = position_dodge()) +
+  # theme_ils +
+  # scale_color_manual(values = c(palette_ils)) +
+
+    scale_x_date(date_breaks = "2 years", date_labels = "'%y") +
+  facet_grid(~Landshluti) +
+  scale_y_continuous(
+    # limits = c(0, NA), 
+    labels = scales::dollar_format(prefix = "", decimal.mark = ",", big.mark = ".")) +
+    # coord_cartesian(ylim = c(90, 130)) +
+  labs(
+    title = "Fjöldi íbúða á hvern íbúa",
+    # subtitle = "Fjöldi íbúða á mann", 
+    caption = "Heimild: Hagstofa Íslands, Þjóðskrá Íslands og Íbúðalánasjóður",
+    x = NULL,
+    y = "Fjöldi"
+  ) +
+    guides(color = FALSE, fill = FALSE)
+
+p1
+
+ggsave_both("ibudir_a_mann")
+
+```
+
+```{r}
+library(patchwork)
+
+
+p1 / p2
+
+ggsave_both("prufa", height = 12)
+```
+
+
+
+```{r}
+
+ibudir_a_mann <- df_byggt %>% 
+  as_tibble() %>% 
+  mutate(
+    ByggingarAr = ByggingarAr %>% as.double(),
+    ByggingarAr = if_else(ByggingarAr < 2008, 2008, ByggingarAr)
+    # ByggingarAr = if_else(is.na(ByggingarAr), 2020, ByggingarAr)
+  ) %>% 
+  # filterinn tekur úr 3194 íbúðir en skilur eftir 140.481
+  filter(
+    !(ByggingarAr < 2019 & ByggingarstigByggingarfulltrua != "7"),
+    Landshluti != "Vantar"
+  ) %>% 
+  arrange(Landshluti, ByggingarAr) %>% 
+  mutate(stig = if_else(ByggingarstigByggingarfulltrua == "7", "Fullgert", "Í byggingu")) %>% 
+  group_by(Landshluti, ByggingarAr, stig) %>% 
+  summarise(fjoldi = sum(fjoldi, na.rm = TRUE)) %>% 
+  group_by(Landshluti, stig) %>% 
+  mutate(fjoldi = cumsum(fjoldi)) %>% 
+  group_by(Landshluti, ByggingarAr) %>% 
+  mutate(
+    `Í byggingu` = sum((stig == "Í byggingu") * fjoldi, na.rm = TRUE) + fjoldi,
+    ) %>% 
+  filter(stig != "Í byggingu") %>% 
+  group_by(Landshluti) %>% 
+  mutate(`Í byggingu` = if_else(ByggingarAr == 2019, `Í byggingu`, NA_integer_)) %>% 
+  left_join(df_pop) %>% 
+  mutate(
+    rat = fjoldi / pop,
+    rat2 = `Í byggingu` / pop
+    ) %>% 
+    ungroup() %>% 
+    mutate(
+      # var = fct_recode(var, "Íbúafjöldi" = "pop", "Fjöldi íbúða" = "fjoldi"),
+      ByggingarAr = ymd(paste(ByggingarAr, 01, 01)),
+      Landshluti = Landshluti %>% 
+        fct_recode("Höfuðborgar-\nsvæðið" = "Höfuðborgarsvæði") %>% 
+        fct_infreq()
+      ) %>% 
+    group_by(Landshluti, ByggingarAr) %>% 
+    ungroup() %>% 
+  mutate(
+    var = "Íbúðir á mann",
+    val = rat
+  ) %>% 
+  select(Landshluti, ByggingarAr, var, val)
+
+p2 <- df_byggt %>% 
+  as_tibble() %>% 
+  mutate(
+    ByggingarAr = ByggingarAr %>% as.double(),
+    ByggingarAr = if_else(ByggingarAr < 2008, 2008, ByggingarAr)
+    # ByggingarAr = if_else(is.na(ByggingarAr), 2020, ByggingarAr)
+  ) %>% 
+  # filterinn tekur úr 3194 íbúðir en skilur eftir 140.481
+  filter(
+    !(ByggingarAr < 2019 & ByggingarstigByggingarfulltrua != "7"),
+    Landshluti != "Vantar"
+  ) %>% 
+  arrange(Landshluti, ByggingarAr) %>% 
+  mutate(stig = if_else(ByggingarstigByggingarfulltrua == "7", "Fullgert", "Í byggingu")) %>% 
+  group_by(Landshluti, ByggingarAr, stig) %>% 
+  summarise(fjoldi = sum(fjoldi, na.rm = TRUE)) %>% 
+  group_by(Landshluti, stig) %>% 
+  mutate(fjoldi = cumsum(fjoldi)) %>% 
+  group_by(Landshluti, ByggingarAr) %>% 
+  mutate(
+    `Í byggingu` = sum((stig == "Í byggingu") * fjoldi, na.rm = TRUE) + fjoldi,
+    ) %>% 
+  filter(stig != "Í byggingu") %>% 
+  group_by(Landshluti) %>% 
+  mutate(
+    `Í byggingu` = `Í byggingu` / first(fjoldi) * 100,
+    fjoldi = fjoldi / first(fjoldi) * 100
+    )  %>% 
+  mutate(`Í byggingu` = if_else(ByggingarAr == 2019, `Í byggingu`, NA_real_)) %>% 
+  left_join(df_pop_visitala) %>% 
+  # left_join(df_CS) %>%
+  gather(var, val, pop, fjoldi) %>% 
+    ungroup() %>% 
+  mutate(
+      ByggingarAr = ymd(paste(ByggingarAr, 01, 01)),
+  ) %>% 
+  bind_rows(kaupverd) %>% 
+    mutate(
+      var = fct_recode(var, "Íbúafjöldi" = "pop", "Fjöldi íbúða" = "fjoldi"),
+      Landshluti = Landshluti %>% fct_recode("Höfuðborgar-\nsvæðið" = "Höfuðborgarsvæði") %>% fct_inorder()
+      ) %>% 
+    # group_by(Landshluti, ByggingarAr) %>% 
+    # mutate(ymin = first(val), ymax = last(val), haerra = ymin <= ymax) %>% 
+    # ungroup() %>% 
+  bind_rows(ibudir_a_mann) %>% 
+  group_by(Landshluti, var) %>% 
+  mutate(
+    vidmid = first(val)
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    var = var %>% str_wrap(10)
+  ) %>% 
+  
+  ggplot(aes(x = ByggingarAr, y = val, color = var, fill = var)) +
+  # geom_point(aes(y = `Í byggingu`), alpha = 0.5, show.legend = FALSE, color = palette_ils_darker[3]) +
+  # geom_hline(yintercept = 100) +
+  geom_line(aes(y = vidmid), color = "black") +
+  geom_line() +
+  # geom_area(alpha = 0.3) +
+  geom_point(size = 0.8) +
+    # geom_ribbon(aes(ymax = ymax, ymin = ymin), alpha = 0.2, color = NA, show.legend = FALSE) +
+    # geom_area(alpha = 0.2, position = position_dodge()) +
+  theme_ils() +
+    scale_x_date(date_breaks = "2 years", date_labels = "'%y") +
+  facet_grid(var~Landshluti, scale = "free_y") +
+  scale_y_continuous(labels = scales::label_comma(big.mark = ".", decimal.mark = ",")) +
+    # coord_cartesian(ylim = c(70, 180)) +
+  labs(
+    title = "Þróun á fjölda íbúða og íbúa eftir landshlutum",
+    subtitle = "Vísitala (2008 = 100)", 
+    caption = "Heimild: Hagstofa Íslands, Þjóðskrá Íslands og Íbúðalánasjóður",
+    y = NULL,
+    x = NULL
+  ) +
+  theme(
+    # panel.border = element_rect(fill = "gray90"),
+    panel.background = element_rect(fill = "gray90", color = NULL),
+    panel.grid.major.y = element_line(color = "white")
+  )
+
+p2
+
+ggsave_both("ibudir_pop", height = 12)
+
+
+```
+

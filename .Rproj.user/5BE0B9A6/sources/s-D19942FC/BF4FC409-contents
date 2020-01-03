@@ -1,0 +1,64 @@
+
+
+# p2r ---------------------------------------------------------------------
+
+read_csv2("oec")
+
+
+
+
+
+
+
+
+
+
+
+
+
+# skattur -----------------------------------------------------------------
+
+
+
+df <- read_excel("Gögn/rsk_eignabil.xlsx", sheet = 2)
+
+df %>% 
+  filter(EIGNABIL <= 90) %>%
+  mutate(FASTEIGNIR = FASTEIGNIR + HUSEIGN_HUS + HUSEIGN_LODA) %>% 
+  group_by(TEKJUAR) %>% 
+  summarise_at(.vars = vars(HREIN_EIGN, FASTEIGNIR, EIGNIR, SKULDIR_VEGNA_IBUDARKAUPA, SKULDIR_ALLS), ~sum(x = . / FJOLDI)) %>% 
+  mutate(
+    hlutfall_eigna = FASTEIGNIR / EIGNIR,
+    medal_skulda_hlutfall = (FASTEIGNIR - SKULDIR_VEGNA_IBUDARKAUPA) / FASTEIGNIR
+  ) %>% 
+  select(TEKJUAR, hlutfall_eigna, medal_skulda_hlutfall) %>% 
+  gather(var, val, -TEKJUAR) %>% 
+  ggplot(aes(x = TEKJUAR, y = val, color = var, group = var)) +
+  geom_line() +
+  theme_ils +
+  scale_color_manual(values = palette_report) +
+  facet_wrap(~var, scale = "free_y") +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0,1, by = 0.1))
+
+df %>% 
+  filter(EIGNABIL <= 90) %>%
+  mutate(FASTEIGNIR = FASTEIGNIR + HUSEIGN_HUS + HUSEIGN_LODA) %>% 
+  group_by(TEKJUAR) %>% 
+  summarise_at(.vars = vars(HREIN_EIGN, FASTEIGNIR, EIGNIR, SKULDIR_VEGNA_IBUDARKAUPA, SKULDIR_ALLS), ~sum(x = . / FJOLDI)) %>% 
+  mutate(
+    hlutfall_eigna = FASTEIGNIR / EIGNIR,
+    hlutfall_hreinna_eigna = (FASTEIGNIR - SKULDIR_VEGNA_IBUDARKAUPA) / HREIN_EIGN
+  ) %>% 
+  select(TEKJUAR, hlutfall_eigna, hlutfall_hreinna_eigna) %>% 
+  # gather(var, val, -TEKJUAR) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = TEKJUAR, y = hlutfall_eigna)) +
+  geom_col() +
+  theme_ils 
+  scale_color_manual(values = palette_report)
+  
+  
+  
+  df_fast_allt
+  
+  

@@ -1,0 +1,30 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1576160187233.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "985530B3",
+    "lastKnownWriteTime" : 1578065897,
+    "last_content_update" : 1578065897985,
+    "path" : "~/GitHub/ILS/Demo.Rmd",
+    "project_path" : "Demo.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "1158,36",
+        "docOutlineSize" : "104.70026397749476",
+        "docOutlineVisible" : "1",
+        "scrollLine" : "1154",
+        "tempName" : "Untitled2",
+        "working_dir" : "default"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

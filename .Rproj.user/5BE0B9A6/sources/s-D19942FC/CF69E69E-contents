@@ -1,0 +1,602 @@
+---
+title: "Price"
+author: "Hannah Patrick"
+date: "01/05/2019"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+#Load librarys 
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(rmarkdown)
+library(readr)
+library(lubridate)
+library(tidyr)
+library(stringr)
+library(RJDBC)
+library(DataExplorer)
+library(data.table)
+library(kableExtra)
+
+listingsandsales <- read.table(file="./Data/results.csv", header=TRUE, sep=";", dec=",", na.strings = "NULL")
+
+
+#Change data types 
+listingsandsales$Date_Max_Price <- ymd(listingsandsales$Date_Max_Price)
+listingsandsales$Date_min_price <- ymd(listingsandsales$Date_min_price)
+listingsandsales$Date_First_Price <- ymd(listingsandsales$Date_First_Price)
+listingsandsales$Date_Final_Price <- ymd(listingsandsales$Date_Final_Price)
+listingsandsales$Date_next_sale_attempt <- listingsandsales$Date_next_sale_attempt
+listingsandsales$contract_Date <- ymd(listingsandsales$contract_Date)
+listingsandsales$Price_sold <- listingsandsales$Price_sold*1000
+listingsandsales$Type_of_building<- trimws(listingsandsales$Type_of_building)
+listingsandsales$EfniUtveggjaLysing <- trimws(listingsandsales$EfniUtveggjaLysing)
+listingsandsales$Size <- as.numeric(listingsandsales$Size)
+
+data <- listingsandsales
+
+
+```
+
+
+
+```{r echo = FALSE, comment=FALSE,warnings=FALSE, cache=FALSE, message=FALSE}
+bkpdata <- data
+
+class.table <- as.data.frame(sapply(data, class))
+if(ncol(class.table)>1){
+  class.table <- as.data.frame(sapply(data, class))[1,]
+  class.table <- class.table %>% gather(Col, Class)
+  DateCols <- class.table$Col[which(class.table$Class=="POSIXct" | class.table$Class=="Date")]
+} else {
+   class.table <- as.data.frame(sapply(data, class))
+   class.table <- tibble::rownames_to_column(class.table, "Col")
+   names(class.table) <- c("Col", "Class")
+   DateCols <- class.table$Col[which(class.table$Class=="Date")]
+}
+
+NumberOfDateCols <- length(DateCols)
+
+dateData <- data[, names(data) %in% DateCols, drop = F]
+data <- data[, !names(data) %in% DateCols, drop = F]
+
+  
+#data <- params$data
+num_discrete <- split_columns(data)$num_discrete
+num_continuous <- split_columns(data)$num_continuous
+num_all_missing <- split_columns(data)$num_all_missing
+
+
+
+continuous_error <- function(e) {
+  if (num_continuous == 0) {
+    cat("No continuous features found.")
+  } else {
+    cat("Continuous features contain too many missing values.\nTry using plot_missing() to determine which features to drop.")
+  }
+}
+
+discrete_error <- function(e) {
+  if (num_discrete == 0) {
+    cat("No discrete features found.")
+  } else {
+    cat("Discrete features contain too many categories.\nTry using group_category() to reduce categories.")
+  }
+}
+
+knitr::opts_chunk$set(fig.width = 14, fig.height = 10, echo = FALSE, comment=NA, warnings=FALSE, cache=FALSE, message=FALSE)
+
+```
+
+<script src="d3.min.js"></script>
+
+
+### Basic Statistics
+The data is **`r format(object.size(bkpdata), units = "auto")`** in size. There are **`r format(nrow(bkpdata), big.mark = ",")`** rows and **`r format(ncol(bkpdata), big.mark = ",")`** columns (features). Of all **`r format(ncol(bkpdata), big.mark = ",")`** columns, **`r I(num_discrete)`** are discrete, **`r I(num_continuous)`** are continuous, **`r I(NumberOfDateCols)`** are dates, and **`r I(num_all_missing)`** are all missing. There are **`r format(sum(is.na(bkpdata)), big.mark = ",")`** missing values out of **`r format(nrow(bkpdata)*ncol(bkpdata), big.mark = ",")`** data points.
+
+#### Data Structure (Text)
+
+```{r }
+#str(bkpdata)
+
+#Split data
+ConCols <- class.table$Col[which(class.table$Class=="numeric" | class.table$Class=="integer")]
+ConData <- data[, names(data) %in% ConCols, drop = F]
+
+DisCols <- class.table$Col[which(class.table$Class=="character")]
+DisData <- data[, names(data) %in% DisCols, drop = F]
+
+#dateData
+
+
+datatypes <- data.frame(Variable = names(bkpdata),
+           Class = sapply(bkpdata, typeof),
+           First_Values = sapply(bkpdata, function(x) paste0(head(x,3),  collapse = ", ")),
+           row.names = NULL) 
+
+charData <- NULL
+if(length(DisData)>0){
+   charData <- data.frame(Variable = names(DisData),
+              Min_Val=sapply(DisData, function(x) min(nchar(x, keepNA =TRUE))),
+              Max_Val=sapply(DisData, function(x) max(nchar(x, keepNA =FALSE))),
+              row.names = NULL) 
+   
+   charData$Min_Val[which(is.na(charData$Min_Val))] <- 0
+}
+
+
+
+NumData <- NULL
+if(length(ConData)>0){
+   NumData <- data.frame(Variable = names(ConData),
+              Min_Val= sapply(ConData, function(x) min(x, na.rm=TRUE)),
+              Max_Val= sapply(ConData, function(x) max(x, na.rm=TRUE)),
+              row.names = NULL) 
+}
+
+
+options(stringsAsFactors=FALSE)
+dateOverview <- NULL
+
+if(length(DateCols)>0) {
+  dateOverview <- NULL
+  dateOverview <- as.data.frame(dateOverview)
+  maxDateData <- apply(dateData,2,max,na.rm=TRUE)
+  minDateData <- apply(dateData,2,min,na.rm=TRUE)
+  
+  for( i in c(1:ncol(dateData))){
+    col <- as.character(DateCols[i])
+    minDate <- as.character(unname(minDateData[i]))
+    maxDate <- as.character(unname(maxDateData[i]))
+    rowToAdd <- c(col, minDate, maxDate)
+    dateOverview <- rbind(dateOverview, rowToAdd)
+  }
+  
+  names(dateOverview) <- c("Variable", "Min_Val", "Max_Val")
+
+}  
+
+
+datasizes <- rbind(charData, NumData, dateOverview)
+
+
+
+datatypes <- inner_join(datatypes, datasizes, by=c("Variable"="Variable"))
+
+kable(datatypes, escape = F, col.names=c("Variable","Class","First Values","Min Size","Max Size")) %>%
+  kable_styling( bootstrap_options = c("striped", "hover","bordered"), full_width = F,position="center") 
+```
+
+Initially from this we can tell the best offer flag and date of best offer are currently incorrect. There are some first and final prices that are presumably outliers from the max and min values shown in the table above. 
+
+
+### Missing Values
+The following graph shows the distribution of missing values.
+```{r}
+heightval <<- ifelse(ncol(bkpdata)>20, 10, ncol(bkpdata)*0.6)
+knitr::opts_chunk$set(fig.width = 14, fig.height = heightval, echo = FALSE, comment=FALSE,warnings=FALSE, cache=FALSE, message=FALSE)
+```
+
+```{r results="asis"}
+plot_missing(bkpdata, theme_config = list(legend.position = c("none")))
+```
+
+The Best_offer and date_best_offer flags are currently not populated - so these can be removed. 
+The snapshot date is also not useful to us here since we're only considering data from a single snapshot. 
+The 33.5% empty Price sold would imply only 66.5% of sale attempts result in a sale. This is over our entire listings history from `r min(bkpdata$Date_First_Price)`.
+
+```{r}
+bkpdata$snapshot_date <- NULL
+bkpdata$Best_offer <- NULL
+bkpdata$date_best_offer <- NULL
+```
+
+
+
+
+### Zero values
+The proportion of 0 values for each numeric column is plotted below, this shows us if there are any missing or suspicious values.
+
+```{r }
+plotzero <- function (data, title = NULL, ggtheme = theme_gray(), theme_config = list(legend.position = c("bottom"))) {
+    feature <- num_missing <- pct_missing <- group <- NULL
+    is_data_table <- is.data.table(data)
+    data_class <- class(data)
+    if (!is_data_table) 
+        data <- data.table(data)
+    missing_value <- data.table(feature = names(data), num_missing = sapply(data, 
+        function(x) {
+            sum(x==0, na.rm=TRUE)
+        }))
+    missing_value[, `:=`(feature, factor(feature, levels = feature[order(-rank(num_missing))]))]
+    missing_value[, `:=`(pct_missing, num_missing/nrow(data))]
+    missing_value[pct_missing < 0.05, `:=`(group, "Good")]
+    missing_value[pct_missing >= 0.05 & pct_missing < 0.4, `:=`(group, 
+        "OK")]
+    missing_value[pct_missing >= 0.4 & pct_missing < 0.8, `:=`(group, 
+        "Bad")]
+    missing_value[pct_missing >= 0.8, `:=`(group, "Remove")][]
+    if (!is_data_table) 
+        class(missing_value) <- data_class
+    output <- ggplot(missing_value, aes_string(x = "feature", 
+        y = "num_missing", fill = "group")) + geom_bar(stat = "identity") + 
+        geom_text(aes(label = paste0(round(100 * pct_missing, 
+            2), "%"))) + scale_fill_manual("Group", values = c(Good = "#1a9641", 
+        OK = "#a6d96a", Bad = "#fdae61", Remove = "#d7191c"), 
+        breaks = c("Good", "OK", "Bad", "Remove")) + 
+        coord_flip() + xlab("Features") + ylab("Number of rows containing 0") + 
+        ggtitle(title) + ggtheme + do.call(theme, theme_config)
+    print(output)
+    return(invisible(missing_value))
+}
+
+
+```
+
+```{r}
+heightval <<- ifelse(ncol(ConData)>20, 10, ncol(ConData)*0.5)
+knitr::opts_chunk$set(fig.width = 14, fig.height = heightval, echo = FALSE, comment=FALSE,warnings=FALSE, cache=FALSE, message=FALSE)
+```
+
+```{r}
+plotzero(ConData, theme_config = list(legend.position = c("none")))
+
+```
+Size of 0, number of rooms 0, number of floors 0, and price_sold of 0 implies that either there are data issues or that the flags are being used to convey an alternative meaning (e.g. list price is sometimes recorded as zero to indicate "make an offer"). These instances will be excluded for now as they are a minimal fraction of the data set.
+
+
+### Data Distribution
+Histograms of all of the features are plotted below to allow for visual inspection of their characteristics and any obvious data issues to be identified. 
+#### Continuous Features (Histogram)
+
+```{r}
+knitr::opts_chunk$set(fig.width = 14, fig.height = 10, echo = FALSE, comment=FALSE,warnings=FALSE, cache=FALSE, message=FALSE)
+```
+
+```{r results="asis"}
+tryCatch(plot_histogram(ConData), error = continuous_error)
+```
+
+
+Is_Apartment and rnum contain only a single value and therefore will not contribute relevant information in this investigation and can be removed. 
+
+
+#### Discrete Features (Bar Chart)
+```{r results="asis", message=TRUE, comment=NA}
+tryCatch(plot_bar(DisData), error = discrete_error)
+
+```
+
+The data contains listings for all types of buildings but we can see that the largest proportions of these are "Sambýlishús", "Einbýlishús", and "Sérbýlishús". Restricting the model to only these types of buildings will ensure miscellaneously attributed uses and fringe building types will not impact the model.
+
+In the case of "phase", with the majority of buildings listed as completed, it may be of value to remove those still under construction. In addition, "size_unit" only differs in how the units of "square meters" are represented, and therefore offers no predictive value to the model.
+
+#### Date Features
+This data set contains the following range of dates.
+```{r comment=NA}
+options(stringsAsFactors=FALSE)
+
+if(length(dateOverview)>0) {
+  names(dateOverview) <- c("Column", "MinDate", "MaxDate")
+  
+  kable(dateOverview, escape = F) %>%
+    kable_styling( bootstrap_options = c("striped", "hover","bordered"), full_width =   F,position="center") 
+} else {
+  print("No Date Features Found")
+  
+}
+
+
+
+```
+
+
+```{r results="asis"}
+### Correlation Analysis  
+
+#Correlation of numeric variables (if there are more than 2).  
+
+# data <- Filter(function(data)!all(is.na(data)), data)
+# data <- dplyr::select_if(data, is.numeric)
+# 
+# if(ncol(data) < 3 ){
+#   print("Too few features for analysis")
+# } else if(ncol(data) <20) {
+# tryCatch(plot_correlation(data, type="continuous", use="pairwise.complete.obs"))
+# } else{
+#   print("Too many features for graph only used first 20")
+#   tryCatch(plot_correlation(data[,c(1:20)], type="continuous", use="pairwise.complete.obs"))
+# }
+
+```
+
+```{r}
+rm(charData, class.table, col, ConCols, ConData,   
+conn, continuous_error, data, datasizes, datatypes, DateCols,   
+dateData, dateOverview, densityfunction, DisCols, discrete_error, DisData,        
+drv, heightval, i, maxDate, maxDateData, minDate, minDateData,
+num_all_missing, num_continuous, num_discrete, NumberOfDateCols,
+NumData, plotzero, query, rowToAdd)
+```
+
+## Closer look at the distributions
+```{r}
+knitr::opts_chunk$set(fig.width = 12, fig.height = 7, echo = FALSE, comment=FALSE,warnings=FALSE, cache=FALSE, message=FALSE)
+```
+
+### "Sold" vs "Not Sold" properties
+
+The listings are split into sales attempts by a gap in listings of over 200 days. These are joined to the sales contracts by date windows and property ids. If no sales contract is found we claim that that sale attempt was unsuccessful. 
+
+This would imply that of the `r nrow(bkpdata)` listings in this data set only `r length(which(bkpdata$was_sold_in_sale_attempt=="sold"))` are categorized as sold. 
+
+
+The graphs below show the proportions of properties that have sold each year. These exclude those which were listed in 2019, since they have not had time to sell; and those categorized as "Vantar"in Capital_Rest_of_country and Country_section!="Vantar" are removed.
+```{r}
+#proportion sold 
+y <- bkpdata %>% #filter(year(Date_First_Price)==2015) %>%
+  group_by(year(Date_First_Price)) %>%
+  summarise(nlisted= n(),
+            nsold=sum(was_sold_in_sale_attempt=="sold"),
+            propsold=(nsold/nlisted)*100)
+#length(which(bkpdata$was_sold_in_sale_attempt=="sold"))/nrow(bkpdata) * 100
+
+y <- bkpdata %>% filter(year(Date_First_Price)<2019, Capital_Rest_of_country!="Vantar") %>%
+  mutate(year= year(Date_First_Price)) %>%
+  group_by(year, Capital_Rest_of_country) %>%
+  summarise(nlisted= n(),
+            nsold=sum(was_sold_in_sale_attempt=="sold"),
+            propsold=(nsold/nlisted)*100)
+
+ggplot(y, aes(year, propsold )) + geom_line(aes(colour=Capital_Rest_of_country)) + theme_bw() + 
+  ylab("Proportion Sold in Sale Events ") + xlab("Year Listed")
+
+y <- bkpdata %>% filter(year(Date_First_Price)<2019, Country_section!="Vantar") %>%
+  mutate(year= year(Date_First_Price)) %>%
+  group_by(year, Country_section) %>%
+  summarise(nlisted= n(),
+            nsold=sum(was_sold_in_sale_attempt=="sold"),
+            propsold=(nsold/nlisted)*100)
+
+ggplot(y, aes(year, propsold )) + geom_line(aes(colour=Country_section)) + theme_bw() + 
+  ylab("Proportion Sold in Sale Events ")+ xlab("Year Listed")
+
+```
+
+```{r}
+#Redundant check for sales event grouping errors. 
+# x <- bkpdata %>% 
+#   group_by(Sale_Attempt_NR, dim_fasteignir) %>% 
+#   mutate(count=n()) %>% filter(count >1)
+#   #filter(dim_fasteignir==4577)
+```
+
+Of those that are categorized as sold the distributions of the sale price & log(sale price) can be seen below: 
+```{r}
+#ggplot(bkpdata, aes(Price_sold)) + geom_histogram(fill="#b3c6e5") + theme_bw()
+#ggplot(bkpdata, aes(log(Price_sold))) + geom_histogram(fill="#b3c6e5") + theme_bw()
+
+
+bkpdata %>% filter(Capital_Rest_of_country!="Vantar") %>%
+ggplot(aes(Price_sold)) + geom_histogram(fill="#b3c6e5") + theme_bw() + 
+  facet_grid(~Capital_Rest_of_country) + xlab("Price Sold") + ylab("Count")
+
+bkpdata %>% filter(Capital_Rest_of_country!="Vantar") %>%
+ggplot(aes(log(Price_sold))) + geom_histogram(fill="#b3c6e5") + theme_bw() + 
+  facet_grid(~Capital_Rest_of_country) + xlab("log(Price Sold)") + ylab("Count")
+```
+
+From these we can see that as expected, the price follows a log normal distribution; with the peak of price sold for the Capital sales being slightly higher. 
+
+
+
+
+### Size Distributions 
+```{r}
+# ggplot(bkpdata, aes(Size)) + geom_histogram(fill="#b3c6e5") + theme_bw()
+# ggplot(bkpdata, aes(log(Size))) + geom_histogram(fill="#b3c6e5") + theme_bw()
+bkpdata %>% filter(Capital_Rest_of_country!="Vantar") %>%
+ggplot( aes(Size)) + geom_histogram(fill="#b3c6e5") + theme_bw() + 
+  facet_grid(~Capital_Rest_of_country) + xlab("Size") + ylab("Count")
+
+bkpdata %>% filter(Capital_Rest_of_country!="Vantar") %>%
+ggplot(aes(log(Size))) + geom_histogram(fill="#b3c6e5") + theme_bw() + 
+  facet_grid(~Capital_Rest_of_country) + xlab("log(Size)") + ylab("Count")
+
+
+```
+The size distributions show that the property size also follows a log normal distribution. The peak of property size in the capital is understandably lower than those outside of the capital area.
+
+
+
+
+### Distributions of construction years
+The plots below show the distributions of construction years in the properties listed since `r min(bkpdata$Date_min_price, na.rm=TRUE)`. 
+The second graph is filtered to those constructed after 1950. 
+```{r}
+ggplot(bkpdata, aes(Built_year)) + geom_histogram(fill="#b3c6e5") + theme_bw()+ 
+  xlab("Built Year") + ylab("Count")
+#ggplot(bkpdata, aes(log(Built_year))) + geom_histogram(fill="#b3c6e5") + theme_bw()
+
+bkpdata %>% filter(Built_year>1950,Capital_Rest_of_country!="Vantar" ) %>%
+ggplot( aes(Built_year)) + geom_histogram(fill="#b3c6e5") + theme_bw() + 
+  facet_grid(~Capital_Rest_of_country) + xlab("Built Year") + ylab("Count")
+```
+Here we can see that as expected there is a larger number of properties being built in the capital than elsewhere. 
+
+
+
+### Length of sale time for sold properties 
+The figures below plot the length of sale time for properties which have sold, excluding those events that are ongoing or have otherwise ended. 
+
+```{r}
+bkpdata %>% filter(Capital_Rest_of_country!="Vantar", was_sold_in_sale_attempt=="sold" ) %>%
+ggplot(aes(log(Length_of_Sale_attempt))) + geom_histogram(fill="#b3c6e5") + theme_bw() + 
+  facet_grid(Capital_Rest_of_country~. )
+```
+
+The peak of the Log(length of sales) is larger for those outside the capital area as is expected. 
+
+
+## Data filtering and exclusions
+
+Based on the findings above the following columns have been selected to be excluded:   
+  
+* Best_offer     
+* date_best_offer    
+* rnum    
+* snapshot_date  
+* Is_Apartment    
+  
+Rows with dubious data, initially to be removed here but which could be cleaned include:   
+
+* Size = 0 - `r round(length(which(bkpdata$Size==0))/nrow(bkpdata) *100,2) `% of the data set;   
+* Number_of_rooms = 0 - `r round(length(which(bkpdata$Number_of_rooms==0))/nrow(bkpdata) *100,2)`% of the data set;   
+* Floors = 0 -  `r round(length(which(bkpdata$Floors==0))/nrow(bkpdata) *100,2)`% of the data set;   
+* Type_of_building= "Verslunar- eða skrifstofuhús", "Vörugeymsla", "Sérhæfð eign", "Bílskúr eða skúr", "Sumarhús" - `r round(length(which(bkpdata$Type_of_building %in% c("Verslunar- eða skrifstofuhús", "Vörugeymsla", "Sérhæfð eign", "Bílskúr eða skúr", "Sumarhús")))/nrow(bkpdata) *100,2)`% of the data set;   
+* phase=construction - `r round(length(which(bkpdata$phase=="Construction"))/nrow(bkpdata) *100,2)`% of the data set;   
+* size_unit = " " - `r round(length(which(bkpdata$size_unit==" "))/nrow(bkpdata) *100,3)`% of the data set;   
+* Capital_Rest_of_country ="Vantar" - `r round(length(which(bkpdata$Capital_Rest_of_country=="Vantar"))/nrow(bkpdata) *100,2) `% of the data set;   
+* Country_section ="Vantar" - `r round(length(which(bkpdata$Country_section=="Vantar"))/nrow(bkpdata) *100,2) `% of the data set;   
+
+```{r}
+#Add a price per square meter
+
+#bkpdata <- listingsandsales
+
+TidyiedSoldProp <- listingsandsales %>%
+  filter(snapshot_date==ymd("2019-04-01"),
+         was_sold_in_sale_attempt=="sold",
+         Size>0, 
+         Number_of_rooms>0, 
+         Floors>0,
+         Type_of_building %in% c("Sambýlishús", "Einbýlishús", "Sérbýlishús"), 
+         size_unit!=" ", 
+         phase=="Completed", 
+         Capital_Rest_of_country!="Vantar", 
+         Country_section!="Vantar") %>%
+  mutate(pricePerM = ifelse(Size>0, Price_sold/Size, NA)) %>%
+  select(dim_fasteignir, Sale_Attempt_NR, Max_Price, Date_Max_Price, Min_Price, Date_min_price, 
+         First_Price, Date_First_Price, Final_Price , Date_Final_Price, Number_of_price_changes, 
+         Length_of_Sale_attempt, views, hits, Date_next_sale_attempt, Price_sold , contract_Date,           
+          Type_of_building, Number_of_rooms, 
+         House_or_apartmentbuilding, Built_year, 
+         Postal_code , Town, Size, Floors, EfniUtveggjaLysing, Capital_Rest_of_country, Country_section, 
+         Growth_evaluation, pricePerM, Municipality, Street_Name,
+         longitude, latitude, views, hits  )
+
+```
+
+  
+This reduces our original data set from `r nrow(bkpdata)` to `r nrow(TidyiedListingsandsales)` rows, a decrease of `r round(((nrow(bkpdata)-nrow(TidyiedListingsandsales))/nrow(bkpdata))*100,0)`%
+
+```{r}
+rm(y, TidyiedListingsandsales, listingsandsales, bkpdata)
+```
+
+
+
+
+```{r}
+IdentifyOutliers <- TidyiedSoldProp %>%
+  mutate(contractYr=year(contract_Date)) %>%
+  group_by(Type_of_building, Number_of_rooms, House_or_apartmentbuilding, Town, Postal_code,  Capital_Rest_of_country, contractYr)  %>%
+  mutate(AvgPricePerSq= mean(pricePerM, na.rm=TRUE)) %>%
+  ungroup %>%
+  mutate(DiffToAv=pricePerM-AvgPricePerSq) 
+  
+# IdentifyOutliers %>% filter(Capital_Rest_of_country!="Vantar") %>%
+# ggplot(aes(contract_Date, DiffToAv)) + geom_line(aes(colour=Capital_Rest_of_country, alpha = 0.5)) +
+#      theme_bw() 
+
+# ggplot()  +
+#   geom_point(data = IdentifyOutliers[which(IdentifyOutliers$DiffToAv>=1000000 | IdentifyOutliers$DiffToAv<=-1000000),], aes(x=contract_Date, y=DiffToAv), colour="red3", shape=1, size=2) + theme_bw() + 
+#   geom_line(data = IdentifyOutliers, aes(x=contract_Date, y=DiffToAv, colour=Capital_Rest_of_country), alpha = 0.7) + ylab("Difference in price to average") + xlab("Contract Date")
+
+
+ggplot()  +
+  geom_point(data = IdentifyOutliers[which(IdentifyOutliers$DiffToAv>=500000 | IdentifyOutliers$DiffToAv<=-500000),], aes(x=contract_Date, y=DiffToAv), colour="red3", shape=1, size=2) + theme_bw() + 
+  geom_line(data = IdentifyOutliers, aes(x=contract_Date, y=DiffToAv, colour=Capital_Rest_of_country), alpha = 0.7) + ylab("Difference in price to average") + xlab("Contract Date")
+
+```
+
+
+```{r}
+# outliers <- IdentifyOutliers %>% filter(IdentifyOutliers$DiffToAv>=1000000 | IdentifyOutliers$DiffToAv<=-1000000)
+
+outliers <- IdentifyOutliers %>% filter(IdentifyOutliers$DiffToAv>=500000 | IdentifyOutliers$DiffToAv<=-500000)
+
+outliers %>% arrange(desc(DiffToAv)) %>% select(Price_sold, contract_Date, Type_of_building, Number_of_rooms, House_or_apartmentbuilding, Built_year,
+          Size, Floors, pricePerM) %>%
+  kable(col.names=c("Price\n Sold", "Contract\n Date", "Building\nType", "Num\nRooms",
+                                "House\nAprt", "Year\nBuilt", "Size" ,"Floors","Price/m"   )) %>%
+  kable_styling(full_width = F, bootstrap_options="striped", font_size = 9)
+
+
+
+```
+
+
+```{r}
+
+fasteignirEx <- paste0(outliers$dim_fasteignir, "_", outliers$Sale_Attempt_NR)
+
+TidyiedSoldProp <- TidyiedSoldProp %>% 
+  mutate(filterKey= paste0(dim_fasteignir, "_", Sale_Attempt_NR)) %>% 
+  filter(!(filterKey %in% fasteignirEx))
+ 
+
+TidyiedSoldProp$filterKey <- NULL
+
+
+#tidy up
+rm(IdentifyOutliers, IdentifyOutliersListing, outliers, fasteignirEx, MaxDiff)
+```
+
+
+```{r}
+modelData <- TidyiedSoldProp
+
+sapply(modelData, function(x) sum(is.na(x)))
+
+modelData <- modelData %>%
+  select(First_Price, Date_First_Price, Sale_Attempt_NR, Type_of_building, Number_of_rooms, 
+         House_or_apartmentbuilding, Built_year, Postal_code, Town, Size, Floors, EfniUtveggjaLysing, 
+         Capital_Rest_of_country, Country_section, Municipality, Street_Name,
+         was_sold_in_sale_attempt) %>%
+  mutate(Age=year(Date_First_Price)-Built_year, 
+         YearListed= year(Date_First_Price), 
+         Month=month(Date_First_Price),
+         target=ifelse(was_sold_in_sale_attempt=="sold","Sold","NotSold"),
+         ListedPerM=First_Price/Size,
+         SizeFloor = Size/Floors
+         )
+
+# unique(modelData$Sale_Attempt_NR)
+# unique(modelData$Type_of_building)
+# unique(modelData$EfniUtveggjaLysing)
+# unique(modelData$Country_section)
+# unique(modelData$Capital_Rest_of_country)
+
+modelData$Type_of_building <- as.factor(modelData$Type_of_building)
+modelData$EfniUtveggjaLysing <- as.factor(modelData$EfniUtveggjaLysing)
+modelData$Country_section <- as.factor(modelData$Country_section)
+modelData$Month <- as.factor(modelData$Month)
+modelData$Postal_code <- as.factor(modelData$Postal_code)
+modelData$target <- as.factor(modelData$target)
+modelData$was_sold_in_sale_attempt <- as.factor(modelData$was_sold_in_sale_attempt)
+modelData$House_or_apartmentbuilding <- as.factor(modelData$House_or_apartmentbuilding)
+modelData$Town <- as.factor(modelData$Town)
+modelData$Capital_Rest_of_country <- as.factor(modelData$Capital_Rest_of_country)
+modelData$Municipality <- as.factor(modelData$Municipality)
+modelData$Street_Name <- as.factor(modelData$Street_Name)
+
+#modelData$Size <- log(modelData$Size)
+#modelData$First_Price <- log(modelData$First_Price)
+modelData$was_sold_in_sale_attempt <- NULL
+
+```
+
