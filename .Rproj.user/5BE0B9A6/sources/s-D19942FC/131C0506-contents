@@ -1,6 +1,6 @@
 
 
-yfirverd <- function(..., print_plot = TRUE, eftir = NULL){
+yfirverd <- function(..., print_plot = TRUE, eftir = NULL, filters = enquo()){
   
   require(tidyverse)
   require(glue)
@@ -8,9 +8,12 @@ yfirverd <- function(..., print_plot = TRUE, eftir = NULL){
   df <- yfirverd_get_data()
   
   my_groups <- enquos(...)
+  # my_filters <- enquos(filters)
   
   df2 <- df %>% 
     sql_clean() %>% 
+    # map(filters, ~. %>% filter(!!!.x))
+    filter(!!!filters) %>%
     mutate(timi = floor_date(Dim_Timi_Utgefid, unit = "months")) %>% 
     group_by(timi, !!!my_groups) %>% 
     summarise_at(

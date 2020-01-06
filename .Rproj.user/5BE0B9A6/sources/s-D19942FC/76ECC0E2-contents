@@ -9,6 +9,7 @@ output: html_document
 
 # set template
 source("https://github.com/karsfri/ILS/raw/master/theme_hms.R")
+source("https://github.com/karsfri/ILS/raw/master/demo_automation.R", encoding = "UTF-8")
 theme_set_hms()
 
 library(tidyverse)
@@ -31,6 +32,49 @@ knitr::opts_chunk$set(
 
 # Dæmi um sjálfvirkni
 
-Hér er dæmi um það hvernig má nýta sjálfvirka uppfærslu gagna og mynda. Notast er við föll sem búa í möppunni *demo_automation.R*.
+Hér er dæmi um það hvernig má nýta sjálfvirka uppfærslu gagna og mynda. Notast er við föll sem búa í möppunni *demo_automation.R*. Það skilar gögnunum og prentar myndina.
 
+```{r}
+df <- yfirverd()
+```
+
+Fallið *yfirverd* tekur einnig við nafn á hópabreytum (e. *group variables*) sem argumenti:
+
+```{r}
+df_landshluti <- yfirverd(Landshluti)
+```
+
+Með argumentinu *eftir* má setja inn í titil eftir hvaða hópum myndunum er skipt:
+
+```{r}
+df3 <- yfirverd(SerbyliFjolbyli, eftir = "tegund húsnæðis")
+
+```
+
+
+Hægt er að koma í veg fyrir að plotið prentist með því að setja *print_plot = FALSE*. Þá skilar fallið bara gögnun
+
+```{r}
+yfirverd(print_plot = FALSE, Landshluti)
+
+```
+
+Þetta getur t.d. verið hjálplegt þegar nýta á gögnin áfram eða ef að breyta á plottinu. Þá er hægt að plotta frá grunni eða nýta fallið *plot_yfirverd* sem að skilar plotinu með sama hætti og *yfirverd* fallið nema ekki eftir facetum.
+
+```{r}
+yfirverd(Landshluti, print_plot = FALSE) %>% 
+  plot_yfirverd(title = "Þetta er titill") +
+  facet_wrap(~Landshluti, ncol = 2)
+```
+
+```{r}
+df3 <- yfirverd(
+  SerbyliFjolbyli, 
+  eftir = "tegund húsnæðis", 
+  filters = quos(
+    SerbyliFjolbyli != "Annað", 
+    SerbyliFjolbyli != "Sérhæft íbúðarhúsnæði")
+  )
+
+```
 
