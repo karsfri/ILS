@@ -19,7 +19,7 @@ Sys.setenv(LANGUAGE="is")
 Sys.setlocale("LC_TIME", "Icelandic")
 
 knitr::opts_chunk$set(
-	echo = FALSE,
+	echo = TRUE,
 	fig.width = 18/2.54,
 	message = FALSE,
 	warning = FALSE,
@@ -66,6 +66,27 @@ yfirverd(Landshluti, print_plot = FALSE) %>%
   plot_yfirverd(title = "Þetta er titill") +
   facet_wrap(~Landshluti, ncol = 2)
 ```
+Eða:
+
+```{r}
+windowsFonts(Chiller = windowsFont("Chiller"))
+
+
+yfirverd(Landshluti, print_plot = FALSE) %>% 
+  plot_yfirverd(title = "Þetta er titill") +
+  facet_wrap(~Landshluti, ncol = 2) +
+  scale_fill_viridis_d(option = "C") + 
+  theme(
+    text = element_text(family = "Chiller"),
+    plot.title = element_text(family = "Chiller"),
+    plot.subtitle = element_text(family = "Chiller"),
+    strip.text = element_text(family = "Chiller"),
+    strip.text.x = element_text(family = "Chiller"),
+    plot.caption = element_text(family = "Chiller"),
+    )
+```
+
+Hægt er að bæta við filterum í argumentið *filters* en passa þarf að það sé inní *quos* falli, því annars kemur villa.
 
 ```{r}
 df3 <- yfirverd(
@@ -76,5 +97,20 @@ df3 <- yfirverd(
     SerbyliFjolbyli != "Sérhæft íbúðarhúsnæði")
   )
 
+```
+
+## Vista skjöl
+
+Seinustu mynd má vista með *save_both* fallinu úr *theme_hms*:
+
+```{r}
+ggsave_both("yfir")
+```
+
+
+Að lokum er hægt að sjá gögnin sem notuð eru til útreikninganna með fallinu *yfirverd_get_data*
+
+```{r}
+yfirverd_get_data()
 ```
 
