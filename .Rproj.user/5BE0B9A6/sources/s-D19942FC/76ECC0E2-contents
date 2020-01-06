@@ -1,0 +1,36 @@
+---
+title: "demo_automation"
+author: "Kári"
+date: "1/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE,echo=FALSE}
+
+# set template
+source("https://github.com/karsfri/ILS/raw/master/theme_hms.R")
+theme_set_hms()
+
+library(tidyverse)
+
+# Þannig að mánaðarnöfnin koma rétt
+Sys.setenv(LANGUAGE="is")
+Sys.setlocale("LC_TIME", "Icelandic")
+
+knitr::opts_chunk$set(
+	echo = FALSE,
+	fig.width = 18/2.54,
+	message = FALSE,
+	warning = FALSE,
+	include = TRUE,
+	dpi = 300,
+	dev.args=list(bg="white")
+)
+
+```
+
+# Dæmi um sjálfvirkni
+
+Hér er dæmi um það hvernig má nýta sjálfvirka uppfærslu gagna og mynda. Notast er við föll sem búa í möppunni *demo_automation.R*.
+
+

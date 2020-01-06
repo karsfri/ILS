@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1578309741242.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "90278617",
+    "id" : "76ECC0E2",
+    "lastKnownWriteTime" : 1578310003,
+    "last_content_update" : 1578310003173,
+    "path" : "~/GitHub/ILS/demo_use_automation.Rmd",
+    "project_path" : "demo_use_automation.Rmd",
+    "properties" : {
+        "cursorPosition" : "35,0",
+        "scrollLine" : "7",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

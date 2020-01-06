@@ -1,10 +1,10 @@
 
-source("https://github.com/karsfri/ILS/raw/master/theme_hms.R")
-theme_set_hms()
 
-
-
-yfirverd <- function(...){
+yfirverd <- function(..., print_plot = TRUE, eftir = NULL){
+  
+  require(tidyverse)
+  require(glue)
+  
   df <- yfirverd_get_data()
   
   my_groups <- enquos(...)
@@ -21,18 +21,30 @@ yfirverd <- function(...){
     select(SeltYfirAuglystuSoluverdi, SeltAAuglystuSoluverdi, SeltUndirAuglystuSoluverdi, timi, !!!my_groups) %>% 
     gather(var, val, SeltYfirAuglystuSoluverdi, SeltAAuglystuSoluverdi, SeltUndirAuglystuSoluverdi) %>% 
     mutate(
-      var = var %>% fct_inorder() %>% fct_rev
+      var = var %>% 
+        fct_inorder() %>% 
+        fct_rev %>% 
+        fct_recode(
+          `Selt undir auglýstu söluverði` = "SeltUndirAuglystuSoluverdi",
+          `Selt á auglýstu söluverði` = "SeltAAuglystuSoluverdi",
+          `Selt yfir auglýstu söluverði` = "SeltYfirAuglystuSoluverdi"
+        )
     ) %>% 
     group_by(var) %>% 
     mutate(val = (val + lag(val) + lag(val, 2)) / 3) 
   
-  p <- df2 %>% 
-    ggplot(aes(x = timi, y = val, fill = var)) +
-    geom_area(position = position_fill()) +
-    scale_y_continuous(labels = scales::percent_format()) +
-    facet_wrap(facets = vars(!!!my_groups))
   
-  print(p)
+  # Plot
+  eftir <- if_else(is.null(eftir), "", paste0("eftir ", eftir, " "))
+  title <- glue("Kaupverð íbúða {eftir}í samanburði við ásett verð")
+  
+
+  if(print_plot) {
+    p <- plot_yfirverd(df2, title = title) +
+      facet_wrap(facets = vars(!!!my_groups))
+    
+    print(p)
+  }
   
   return(df2)
   
@@ -83,9 +95,17 @@ yfirverd_get_data <- function(){
   df %>% as_tibble()
 }
 
-
-# df_Landshluti <- yfirverd(Landshluti)
-# df_Landshluti
-
-
+plot_yfirverd <- function(df, title = NULL, facets){
+  df %>% 
+    ggplot(aes(x = timi, y = val, fill = var)) +
+    geom_area(position = position_fill()) +
+    scale_y_continuous(labels = scales::percent_format()) +
+    labs(
+      y = NULL, 
+      x = NULL, 
+      title = title,
+      subtitle = "-3ja mánaða hlaupandi meðaltal",
+      caption = "Heimild: Þjóðskrá Íslands, Fasteignaleit, hagdeild HMS"
+    ) 
+}
 
