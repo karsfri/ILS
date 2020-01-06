@@ -294,6 +294,9 @@ int_to_double <- function(df){
 }
 
 sql_clean <- function(df){
+  require(tidyverse)
+  require(lubridate)
+  
   df %>% 
     string_to_date %>% 
     int_to_double
