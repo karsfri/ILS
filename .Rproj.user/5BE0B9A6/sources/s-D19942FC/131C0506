@@ -5,22 +5,22 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "3218673869",
+    "hash" : "2237119652",
     "id" : "131C0506",
-    "lastKnownWriteTime" : 1578304844,
-    "last_content_update" : 1578304844214,
+    "lastKnownWriteTime" : 1578306808,
+    "last_content_update" : 1578306808387,
     "path" : "~/GitHub/ILS/demo_automation.R",
     "project_path" : "demo_automation.R",
     "properties" : {
-        "cursorPosition" : "10,15",
-        "scrollLine" : "0",
+        "cursorPosition" : "87,15",
+        "scrollLine" : "63",
         "tempName" : "Untitled1"
     },
     "read_only" : false,
     "read_only_alternatives" : [
     ],
     "relative_order" : 6,
-    "source_on_save" : false,
+    "source_on_save" : true,
     "source_window" : "",
     "type" : "r_source"
 }

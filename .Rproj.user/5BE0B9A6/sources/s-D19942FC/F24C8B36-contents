@@ -7,7 +7,7 @@ output: html_notebook
 
 # set template
 source("https://github.com/karsfri/ILS/raw/master/theme_hms.R")
-theme_set_ils()
+theme_set_hms()
 
 library(DBI)
 library(tidyverse)
