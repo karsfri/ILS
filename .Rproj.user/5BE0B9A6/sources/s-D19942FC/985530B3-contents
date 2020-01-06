@@ -1161,3 +1161,41 @@ kaupsamningar %>%
 
 
 # Föll
+
+Hefðbundið fall:
+
+```{r}
+fun1 <- function(x){
+  x + 2
+}
+
+tibble(
+  x = 1:10
+) %>% 
+  mutate(y = fun1(x))
+
+```
+
+Ef að pípa byrjar á "." þá er því breytt í fall
+
+```{r}
+fun2 <- . %>% exp()
+
+tibble(
+  x = 1:10
+) %>% 
+  mutate(y = fun2(x))
+
+```
+
+"Wrapper" föll geta eru föll eru notuð til þess að breyta default argumentum á föllum sem þegar eru til. Þá getur verið gott að nota "..." (ellipsis) notation sem heldur utan um öll argument sem ekki eru skilgreind beint í viðkomandi falli. Gott dæmi er *ggsave_png* fallið sem er staðlar nokkur helstu argument fyrir *HMS*.
+
+```{r}
+ggsave_png <- function(filename, plot = last_plot(), device = ragg::agg_png, width = width_wide,
+                       height = height_regular, units = "cm", dpi = dpi_reg, bg = "white", ...){
+  ggsave(filename = filename, plot = plot, device = device, width = width, height = height, units = units,
+         res = dpi, background = bg, ...)
+}
+```
+
+
