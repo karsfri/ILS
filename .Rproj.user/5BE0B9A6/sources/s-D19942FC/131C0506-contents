@@ -3,6 +3,7 @@
 yfirverd <- function(..., print_plot = TRUE, eftir = NULL, filters = NULL){
   
   require(tidyverse)
+  require(lubridate)
   require(glue)
   
   df <- yfirverd_get_data()

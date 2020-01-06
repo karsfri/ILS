@@ -1,15 +1,15 @@
 
 
-yfirverd <- function(..., print_plot = TRUE, eftir = NULL, filters = enquo()){
+yfirverd <- function(..., print_plot = TRUE, eftir = NULL, filters = NULL){
   
   require(tidyverse)
+  require(lubridate)
   require(glue)
   
   df <- yfirverd_get_data()
   
   my_groups <- enquos(...)
-  # my_filters <- enquos(filters)
-  
+
   df2 <- df %>% 
     sql_clean() %>% 
     # map(filters, ~. %>% filter(!!!.x))
