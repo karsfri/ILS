@@ -1,0 +1,8 @@
+"0","df3 <- yfirverd("
+"0","  SerbyliFjolbyli, "
+"0","  eftir = ""tegund húsnæðis"", "
+"0","  filters = quos("
+"0","    SerbyliFjolbyli != ""Annað"", "
+"0","    SerbyliFjolbyli != ""Sérhæft íbúðarhúsnæði"")"
+"0","  )"
+"0",""

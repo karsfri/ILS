@@ -98,7 +98,7 @@ yfirverd_get_data <- function(){
   df %>% as_tibble()
 }
 
-plot_yfirverd <- function(df, title = NULL, facets){
+plot_yfirverd <- function(df, title = NULL){
   df %>% 
     ggplot(aes(x = timi, y = val, fill = var)) +
     geom_area(position = position_fill()) +

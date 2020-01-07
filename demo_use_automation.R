@@ -1,4 +1,5 @@
 source("https://github.com/karsfri/ILS/raw/master/theme_hms.R")
+source("https://github.com/karsfri/ILS/raw/master/demo_automation.R", encoding = "UTF-8")
 theme_set_hms()
 
 yfirverd(Landshluti)
