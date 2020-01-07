@@ -14,30 +14,30 @@ color_main <- "#11223a"
 
 # we really need more colors. This is mixture of the new and the old palette
 palette_light <- c(
- "#F3E074", # blue - main color
-  "#82C2D3", # hms2
+ "#11223a", # blue - main color
+  "#8cc0c6", # hms2
   "#b3cfd1", # hms3
-  "#B1BFC2", # hms extra 1
+  "#b39271", # hms extra 1
   "#00aec7", # hms extra 2
   "#EC8865", # old
   "#C56BA4"  # old
 )
 
 palette_medium <- c(
-  "#F3E074", # blue - main color
-  "#82C2D3", # hms2
+  "#11223a", # blue - main color
+  "#8cc0c6", # hms2
   "#b3cfd1", # hms3
-  "#B1BFC2", # hms extra 1
+  "#b39271", # hms extra 1
   "#00aec7", # hms extra 2
   "#EC8865", # old
   "#C56BA4"  # old
 )
 
 palette_dark <- c(
-  "#F3E074", # blue - main color
-  "#82C2D3", # hms2
+  "#11223a", # blue - main color
+  "#8cc0c6", # hms2
   "#b3cfd1", # hms3
-  "#B1BFC2", # hms extra 1
+  "#b39271", # hms extra 1
   "#00aec7", # hms extra 2
   "#EC8865", # old
   "#C56BA4"  # old
