@@ -7,6 +7,7 @@ yfirverd <- function(..., print_plot = TRUE, eftir = NULL, filters = NULL){
   require(glue)
   
   df <- yfirverd_get_data()
+  if(NROW(df) > 0) stop("0 rows returned from DB")
   
   my_groups <- enquos(...)
 
@@ -97,6 +98,25 @@ yfirverd_get_data <- function(){
   df <- dbGetQuery(con, query_yfirverd)
   df %>% as_tibble()
 }
+
+con <- function(){
+  # creates a connection to HgrDwh based on OS
+  require(odbc)
+  require(DBI)
+  library(RJDBC)
+  
+  if(Sys.info()['sysname'] == "Windows"){
+    return(dbConnect(odbc(), "HgrDwh_Prod", timeout = 10, encoding = "WINDOWS-1252"))
+  } else if (Sys.info()['sysname'] == "osx") {
+    options(java.parameters = "-Xmx8048m")
+    drv <- JDBC(driverClass="com.microsoft.sqlserver.jdbc.SQLServerDriver", classPath="D:/R/Drivers/mssql-jdbc-7.2.1.jre8.jar")
+    con <- dbConnect(drv, url="jdbc:sqlserver://localhost;DatabaseName=HgrDwh", user="HgrExtProc", password=Pass)
+    return(con)
+  }
+  stop("OS not detected")
+  
+}
+
 
 plot_yfirverd <- function(df, title = NULL){
   df %>% 

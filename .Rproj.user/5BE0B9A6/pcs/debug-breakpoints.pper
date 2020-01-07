@@ -1,6 +1,21 @@
 {
     "debugBreakpointsState" : {
         "breakpoints" : [
+            {
+                "editor_line_number" : 41,
+                "editor_state" : 1,
+                "function_name" : "yfirverd",
+                "function_steps" : "8",
+                "id" : 23,
+                "is_package_breakpoint" : false,
+                "is_pending_debug_completion" : false,
+                "line_number" : 41,
+                "needs_updated_steps" : false,
+                "package_name" : "",
+                "path" : "~/GitHub/ILS/demo_automation.R",
+                "state" : 1,
+                "type" : 0
+            }
         ]
     }
 }
