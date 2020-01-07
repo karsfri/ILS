@@ -10,11 +10,11 @@ output: html_document
 # set template
 source("https://github.com/karsfri/ILS/raw/master/theme_hms.R")
 source("https://github.com/karsfri/ILS/raw/master/demo_automation.R", encoding = "UTF-8")
-theme_set_hms()
+theme_set_hms() # Sets default theme and default colors for most popular geoms.
 
 library(tidyverse)
 
-# Þannig að mánaðarnöfnin koma rétt
+# Setup
 Sys.setenv(LANGUAGE="is")
 Sys.setlocale("LC_TIME", "Icelandic")
 
@@ -30,21 +30,21 @@ knitr::opts_chunk$set(
 
 ```
 
-# Dæmi um sjálfvirkni
+# Example of automated graphics
 
-Hér er dæmi um það hvernig má nýta sjálfvirka uppfærslu gagna og mynda. Notast er við föll sem búa í möppunni *demo_automation.R*. Það skilar gögnunum og prentar myndina.
+Here is an example of how to use a automatically updated plotting functions. The function *yfirverd*, found in *demo_automation.R*, prints out a plot and returns the data used:
 
 ```{r}
 df <- yfirverd()
 ```
 
-Fallið *yfirverd* tekur einnig við nafn á hópabreytum (e. *group variables*) sem argumenti:
+The function *yfirverd* also accepts group variables as an argument:
 
 ```{r}
 df_landshluti <- yfirverd(Landshluti)
 ```
 
-Með argumentinu *eftir* má setja inn í titil eftir hvaða hópum myndunum er skipt:
+With the argument *eftir* it's possible to add the names of the groups to the title:
 
 ```{r}
 df3 <- yfirverd(SerbyliFjolbyli, eftir = "tegund húsnæðis")
@@ -52,18 +52,18 @@ df3 <- yfirverd(SerbyliFjolbyli, eftir = "tegund húsnæðis")
 ```
 
 
-Hægt er að koma í veg fyrir að plotið prentist með því að setja *print_plot = FALSE*. Þá skilar fallið bara gögnun
+To prevent the plot from printing, set *print_plot = FALSE*. Then the function only returns the data used:
 
 ```{r}
 yfirverd(print_plot = FALSE, Landshluti)
 
 ```
 
-Þetta getur t.d. verið hjálplegt þegar nýta á gögnin áfram eða ef að breyta á plottinu. Þá er hægt að plotta frá grunni eða nýta fallið *plot_yfirverd* sem að skilar plotinu með sama hætti og *yfirverd* fallið nema ekki eftir facetum.
+This can be helpful, e.g. when making a custumized plot or make further calculations. It's also possible to use *plot_yfirverd* to get the plot object, but without facets, for better custumizations:
 
 ```{r}
 yfirverd(Landshluti, print_plot = FALSE) %>% 
-  plot_yfirverd(title = "Þetta er titill") +
+  plot_yfirverd(title = "This is a title") +
   facet_wrap(~Landshluti, ncol = 2)
 ```
 Eða:
@@ -73,7 +73,7 @@ windowsFonts(Chiller = windowsFont("Chiller"))
 
 
 yfirverd(Landshluti, print_plot = FALSE) %>% 
-  plot_yfirverd(title = "Þetta er titill") +
+  plot_yfirverd(title = "This is a title") +
   facet_wrap(~Landshluti, ncol = 2) +
   scale_fill_viridis_d(option = "C") + 
   theme(
@@ -86,7 +86,7 @@ yfirverd(Landshluti, print_plot = FALSE) %>%
     )
 ```
 
-Hægt er að bæta við filterum í argumentið *filters* en passa þarf að það sé inní *quos* falli, því annars kemur villa.
+You can add filters to the data with the *filters* argument, but the filters need to be enclosed in a *quos* function call for it to work.
 
 ```{r}
 df3 <- yfirverd(
@@ -99,16 +99,15 @@ df3 <- yfirverd(
 
 ```
 
-## Vista skjöl
+## Saving the graphs
 
-Seinustu mynd má vista með *save_both* fallinu úr *theme_hms*:
+The *save_both* function from *theme_hms* is a wrapper for *ggsave* and saves the last plot, both as *svg* and as a *png* at a specified size.
 
 ```{r}
 ggsave_both("yfir")
 ```
 
-
-Að lokum er hægt að sjá gögnin sem notuð eru til útreikninganna með fallinu *yfirverd_get_data*
+Finally, the function *yfirverd_get_data* shows the data that the function *yfirverd* gets from the datawarehouse. 
 
 ```{r}
 yfirverd_get_data()
