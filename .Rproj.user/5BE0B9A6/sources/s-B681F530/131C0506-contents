@@ -58,7 +58,7 @@ yfirverd_get_data <- function(){
   require(odbc)
   require(DBI)
   
-  con <- dbConnect(odbc(), "HgrDwh_Prod", timeout = 10, encoding = "WINDOWS-1252")
+  con <- con()
   
   # sql script
   query_yfirverd <- "SELECT 
