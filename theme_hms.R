@@ -341,7 +341,24 @@ map_seas <- function(data, var, date){
     unnest(c(seas))
 }
 
-# kaupsamningar %>%
-#   mutate(fjoldi2 = 2*fjoldi) %>%
-#   group_by(Landshluti) %>%
-#   map_seas(fjoldi, Dim_Timi_Utgefid)
+test_line<- function(){
+  data("economics")
+  
+  economics %>% 
+    gather(var, val, -date) %>% 
+    ggplot(aes(date, val, color = var)) +
+    geom_line() +
+    theme_hms() +
+    scale_color_manual(values = palette_dark)
+}
+
+test_area<- function(){
+  data("economics")
+  
+  economics %>% 
+    gather(var, val, -date) %>% 
+    ggplot(aes(date, val, color = var)) +
+    geom_line() +
+    theme_hms() +
+    scale_color_manual(values = palette_dark)
+}

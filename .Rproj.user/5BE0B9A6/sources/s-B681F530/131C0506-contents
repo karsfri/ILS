@@ -7,7 +7,7 @@ yfirverd <- function(..., print_plot = TRUE, eftir = NULL, filters = NULL){
   require(glue)
   
   df <- yfirverd_get_data()
-  if(NROW(df) > 0) stop("0 rows returned from DB")
+  if(NROW(df) == 0) stop("0 rows returned from DB")
   
   my_groups <- enquos(...)
 
