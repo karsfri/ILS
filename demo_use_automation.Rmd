@@ -20,7 +20,7 @@ Sys.setlocale("LC_TIME", "Icelandic")
 
 knitr::opts_chunk$set(
 	echo = TRUE,
-	fig.width = 18/2.54,
+	fig.width = width_wide/2.54,
 	message = FALSE,
 	warning = FALSE,
 	include = TRUE,

@@ -1,0 +1,179 @@
+
+
+#Load librarys 
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(lubridate)
+library(tidyr)
+library(stringr)
+library(RJDBC)
+options(scipen=999)
+
+
+######## Connect & query data warehouse #######
+
+# jdbc connect to get data 
+options(java.parameters = "-Xmx8048m")
+
+
+drv <- JDBC(driverClass="com.microsoft.sqlserver.jdbc.SQLServerDriver", classPath="D:/R/Drivers/mssql-jdbc-7.2.1.jre8.jar")
+conn <- dbConnect(drv, url="jdbc:sqlserver://localhost;DatabaseName=HgrDwh", user="HgrExtProc", password=Pass)
+
+# Connect inhous:
+# conn <- dbConnect(odbc::odbc(), "HgrDwh_Prod", timeout = 10, encoding = "WINDOWS-1252")
+
+
+# Define Queries
+
+# Distinct dim_fasteignir property listings from snapshot history 
+# If we want to have the absorption rate from before the snapshot we would need 
+# to use the created and deleted listing dates from the first snapshot. 
+# The listing delted dates are not always reliable. 
+FastQuery <- " SELECT  
+aa.dim_timi_snapshot,
+bb.Eribud,
+bb.Landshluti,
+count(distinct dim_fasteignir) TotalListed
+FROM 
+[dwh].[Fact_Auglysingar] aa 
+JOIN  [dwh].[dim_Fasteignir] bb 
+ON aa.[dim_fasteignir] = bb.[Dim_Fasteignir_sk]
+JOIN dwh.dim_timi dtim     
+ON aa.dim_timi_snapshot = dtim.dim_timi_sk
+WHERE aa.Virk_Auglysing=1
+AND bb.Eribud is not null
+AND bb.Landshluti is not null
+GROUP BY bb.Eribud, bb.Landshluti, aa.dim_timi_snapshot"
+
+KaupQuery <- "SELECT  
+  [Dim_Timi_Utgefid] as ContractDate,
+  [Dim_Timi_Thinglyst] as NotaryDate,
+  [Dim_Fasteignir] as dim_fasteignir,
+  [Kaupverd] PurchasePrice,
+  [Faerslunumer],
+  [ErIbud],
+  [FjoldiFasteigna],
+  F.Landshluti
+FROM [dwh].[Fact_Kaupsamningar_Stakar] K
+INNER JOIN [dwh].[Dim_Fasteignir] F
+  on K.Dim_Fasteignir=F.Dim_Fasteignir_sk;"
+
+
+# Read in the data 
+Listings <- dbGetQuery(conn, FastQuery)
+Contracts <- dbGetQuery(conn, KaupQuery)
+
+# Disconnect
+dbDisconnect(conn)
+
+
+# The absorbtion rate is calculated by dividing the average number of sales per 
+# month by the total number of available homes. This equation can also be reversed
+# to identify the number of months it would take for supply to be sold.
+
+# Here we are using the number of distinct listed properties on the first day of each month 
+# (For each snapshot date on the 1st of every month)
+# And the number of contracts signed (not notarised) for the previous month
+
+
+# Convert data types - using the snapshot dates 
+Listings$dim_timi_snapshot <- ymd(Listings$dim_timi_snapshot)
+
+# Listings dim_timi_snapshot is daily now - it was on the 1st of the month previously 
+# Calculating the Apsorbtion rate for the first of each month when we historically
+# recieved the snapshot of the listings 
+
+#Contracts date values
+Contracts$ContractDate <- ymd(Contracts$ContractDate)
+
+
+# Group contracts into month and create a join month value for the 1st of the next month.
+Contracts$ContractMonth <- floor_date(Contracts$ContractDate, unit ='month' )
+
+
+ContractsByGroup <- function(Contracts = Contracts, ...){
+  group_vars <- enquos(...)
+  Contracts %>% 
+    filter(!(is.na(ErIbud)), !(is.na(Landshluti))) %>%
+    group_by(!!!group_vars) %>%
+    summarise(TotalSold = n_distinct(Faerslunumer)) %>% 
+    mutate(JoinMonth = ContractMonth %m+% months(1))  %>% 
+    ungroup()
+}
+  
+
+ContractsByMonth <- Contracts %>% 
+  ContractsByGroup(ContractMonth, ErIbud, Landshluti)
+
+
+# Join the monthly number of contracts to the listings on the 1st of each months snapshot
+Joined <- inner_join(Listings, ContractsByMonth, by= c("dim_timi_snapshot"="JoinMonth", 
+                   "Eribud"="ErIbud", "Landshluti"="Landshluti"))
+
+
+
+# Results in a number of listings on the first of the month, 
+# total number of signed contracts for the previous month per Eribud and Landshluti combination 
+# This relys on the fact that a dim_fasteignir cannot have multiple eribud or Landshluti values
+
+
+# Function to calculate the Absorbtion rates based on filters listed 
+CalcAbsorbtion<- function(data, groupingVars) {
+  
+  AbsorptionRates <- data %>% group_by_at(groupingVars)%>%
+    summarise(TotalSold=sum(TotalSold),
+              TotalListed=sum(TotalListed)) %>%
+    mutate(AbsorptionRate=TotalSold/TotalListed,
+           MonthlySupply=TotalListed/TotalSold
+          ) %>%
+    ungroup()
+  
+  # Add a column to list filters used 
+  filters <- groupingVars[!(groupingVars %in% c("dim_timi_snapshot")) ]
+  
+  Totalfiltered <- NULL
+  for(i in 1:length(filters)){
+   filtered <- paste0(filters[i], AbsorptionRates[[filters[i]]])
+   Totalfiltered <- paste0(Totalfiltered,";", filtered)
+  }
+  
+  Totalfiltered <- str_sub(Totalfiltered, 2, -1)
+  AbsorptionRates$filtered <- Totalfiltered
+  
+  AbsorptionRates <- AbsorptionRates %>% select(dim_timi_snapshot,filtered, AbsorptionRate, MonthlySupply)
+  
+  return(AbsorptionRates)
+}
+
+
+# Calculate the Absorption rate
+# per Landshluti and eribud combinations
+AbsorptionPerAreaAndType <- CalcAbsorbtion(Joined, c("dim_timi_snapshot", "Eribud","Landshluti"))
+
+
+# Just per house type residential or not (eribud)
+AbsorptionPerType <- CalcAbsorbtion(Joined, c("dim_timi_snapshot", "Eribud"))
+
+
+# Join the absorption values for each Landshluti and eribud and just eribud
+OutputMetrics <- rbind(AbsorptionPerAreaAndType, AbsorptionPerType)
+
+
+  
+######## Write to DWH ########
+
+###### Connect to DWH and write into table HgrRaw.ext.R_Absorption ######
+
+# # Connect to Database HgrRaw
+# conn <- dbConnect(drv, url="jdbc:sqlserver://localhost;DatabaseName=HgrRaw", user="HgrExtProc", password=Pass)
+# 
+# # Write to database in table HgrRaw.ext.R_Absorption CURRENTLY SET TO OVERWRITE THE TABLE 
+# OTHERWISE SET append= TRUE, overwrite= FALSE
+# dbWriteTable(conn, name="R_Absorption", value=OutputMetrics, overwrite= TRUE)
+# 
+# #disconnect
+# dbDisconnect(conn)
+
+

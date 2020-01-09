@@ -10,6 +10,7 @@ windowsFonts(SetimoLight = windowsFont("Setimo Light"))
 blue <- "#11223a"
 red <- "#ff5028"
 color_main <- "#11223a"
+color_extra <- "#11223a"
 
 
 # we really need more colors. This is mixture of the new and the old palette
@@ -78,19 +79,19 @@ theme_hms <- function(tms = 1){
       
       plot.background = element_blank(),
       panel.background = element_blank(),
-      panel.grid.major.y = element_line(colour = "gray90", size = 0.2),
+      panel.grid.major.y = element_line(colour = color_extra, size = 0.2),
       panel.grid.major.x = element_blank(),
       
       strip.text = element_text(family = "SetimoLight", size = 7 * tsm, color = "black", face = "bold"),
       strip.text.x = element_text(family = "SetimoLight", size = 7 * tsm, color = "black", face = "bold"),
       strip.background = element_blank(),
       
-      plot.title = element_text(family = "Setimo", size = 12 * tsm, face = "bold", color = blue),
-      plot.subtitle = element_text(family = "Setimo", size = 7 * tsm, color = blue),
-      plot.caption = element_text(family = "SetimoLight", size = 7 * tsm, color = blue, face = "italic"),
+      plot.title = element_text(family = "Setimo", size = 14 * tsm, face = "bold", color = blue),
+      plot.subtitle = element_text(family = "Setimo", size = 10 * tsm, color = blue),
+      plot.caption = element_text(family = "SetimoLight", size = 8 * tsm, color = blue, face = "italic"),
       axis.title = element_text(size = 7 * tsm),
-      axis.text = element_text(size = 7 * tsm),
-      legend.text = element_text(size = 8 * tsm),
+      axis.text = element_text(colour = color_extra, size = 8 * tsm),
+      legend.text = element_text(colour = color_extra, size = 9 * tsm),
       plot.title.position = "plot",
       # axis.text.x = element_blank(),
       
@@ -352,7 +353,8 @@ test_line<- function(){
     scale_color_manual(values = palette_dark)
 }
 
-test_area<- function(){
+test_graphs <- function(){
+  require(here)
   data("economics")
   
   economics %>% 
@@ -360,5 +362,120 @@ test_area<- function(){
     ggplot(aes(date, val, color = var)) +
     geom_line() +
     theme_hms() +
-    scale_color_manual(values = palette_dark)
+    scale_color_manual(values = palette_dark) +
+    scale_y_continuous(labels = label_isl()) +
+    labs(
+      title = "Lines and stuff",
+      subtitle = "With HMS colors",
+      x = NULL, 
+      y = NULL,
+      caption = "Source: None of your business :P"
+    )
+  
+  ggsave_both(here("test_graphs", "lines"))
+  
+  economics %>% 
+    filter(date == floor_date(date, "year"), year(date) > 2000) %>% 
+    gather(var, val, -date) %>% 
+    ggplot(aes(date, val, color = var)) +
+    geom_col(width = 0.3) +
+    geom_point() +
+    theme_hms() +
+    scale_color_manual(values = palette_dark) +
+    scale_y_continuous(labels = label_isl()) +
+    labs(
+      title = "Lollipops and stuff",
+      subtitle = "With HMS colors",
+      x = NULL, 
+      y = NULL,
+      caption = "Source: None of your business :P"
+    ) +
+    facet_wrap(~var, scales = "free_y")
+  
+  ggsave_both(here("test_graphs", "lollipop"))
+  
+  economics %>% 
+    filter(date == floor_date(date, "year"), year(date) > 2000) %>% 
+    gather(var, val, -date) %>% 
+    ggplot(aes(date, val, color = var)) +
+    geom_col(width = 0.3) +
+    geom_point() +
+    theme_hms() +
+    scale_color_manual(values = palette_dark) +
+    scale_y_continuous(labels = label_isl()) +
+    labs(
+      title = "Lollipops and stuff",
+      subtitle = "With HMS colors",
+      x = NULL, 
+      y = NULL,
+      caption = "Source: None of your business :P"
+    ) +
+    facet_wrap(~var, scales = "free_y", ncol = 2)
+  
+  ggsave_both(here("test_graphs", "lollipop_narrow_high"), width = width_narrow, height =  height_full)
+  
+  economics %>% 
+    filter(date == floor_date(date, "year"), year(date) > 2000) %>% 
+    gather(var, val, -date) %>% 
+    ggplot(aes(date, val, fill = var)) +
+    geom_col() +
+    theme_hms() +
+    scale_color_manual(values = palette_dark) +
+    scale_y_continuous(labels = label_isl()) +
+    labs(
+      title = "Bars and stuff",
+      subtitle = "With HMS colors",
+      x = NULL, 
+      y = NULL,
+      caption = "Source: None of your business :P"
+    ) +
+    facet_wrap(~var, scales = "free_y")
+  
+  ggsave_both(here("test_graphs", "col"))
+  
+  economics %>% 
+    filter(date == floor_date(date, "year"), year(date) > 2000) %>% 
+    gather(var, val, -date) %>% 
+    filter(var == "pop") %>% 
+    ggplot(aes(date, val)) +
+    geom_col() +
+    geom_text(aes(label = val), angle = 90, size = 3, color = "white", hjust = 1) +
+    theme_hms() +
+    scale_color_manual(values = palette_dark) +
+    scale_y_continuous(labels = label_isl()) +
+    labs(
+      title = "Bars and stuff",
+      subtitle = "With HMS colors",
+      x = NULL, 
+      y = NULL,
+      caption = "Source: None of your business :P"
+    ) +
+    # facet_wrap(~var, scales = "free_y") + 
+    theme(
+      panel.grid.major.y = element_blank(),
+      axis.text.y = element_blank()
+    )
+  
+  ggsave_both(here("test_graphs", "col_minimal"))
+  
+  economics %>% 
+    filter(date == floor_date(date, "year"), year(date) > 2000) %>% 
+    gather(var, val, -date) %>% 
+    ggplot(aes(date, val, fill = var, color = var)) +
+    geom_area(alpha = 0.5, color = NA) +
+    geom_line() +
+    theme_hms() +
+    scale_color_manual(values = palette_dark) +
+    scale_y_continuous(labels = label_isl()) +
+    labs(
+      title = "Area and stuff",
+      subtitle = "With HMS colors",
+      x = NULL, 
+      y = NULL,
+      caption = "Source: None of your business :P"
+    ) +
+    facet_wrap(~var, scales = "free_y")
+  
+  ggsave_both(here("test_graphs", "area"))
+  
 }
