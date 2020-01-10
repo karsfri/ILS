@@ -3,6 +3,7 @@ title: "Template"
 output: html_notebook
 ---
 
+
 ```{r setup, include=FALSE,echo=FALSE}
 
 # set template
@@ -11,11 +12,7 @@ theme_set_hms()
 
 library(DBI)
 library(tidyverse)
-library(sf)
-library(seasonal)
-library(tsibble)
 library(lubridate)
-library(readxl)
 
 # Þannig að mánaðarnöfnin koma rétt
 Sys.setenv(LANGUAGE="is")
@@ -45,4 +42,3 @@ con <- dbConnect(odbc::odbc(), "HgrDwh_Prod", timeout = 10, encoding = "WINDOWS-
 ```{r}
 df
 ```
-

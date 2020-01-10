@@ -1,0 +1,16 @@
+"0","df <- yfirverd()
+"
+"1","Called from: "
+"1","eval(expr, p)
+"
+"0","n"
+"1","debug at ~/GitHub/ILS/demo_automation.R#5: "
+"1","require(tidyverse)
+"
+"0","  require(tidyverse)"
+"0","  require(lubridate)"
+"0","  require(glue)"
+"0","  df <- yfirverd_get_data()"
+"0","  if(NROW(df) == 0) stop(""0 rows returned from DB"")"
+"0","  my_groups <- enquos(...)"
+"0","df"

@@ -1,3 +1,0 @@
-"0","yfirverd(Landshluti, print_plot = FALSE) %>% "
-"0","  plot_yfirverd(title = ""This is a title"") +"
-"0","  facet_wrap(~Landshluti, ncol = 2)"

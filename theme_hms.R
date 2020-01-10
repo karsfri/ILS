@@ -245,7 +245,7 @@ theme_set_hms <- function(theme = theme_hms(), change_palettes = TRUE){
 
 # Common caption names ----------------------------------------------------
 
-cap_hms <- "Heimild: hagdeild Húsnæðis- og mannvirkjastofnunar"
+cap_hms <- "Heimild: Hagdeild Húsnæðis- og mannvirkjastofnunar"
 cap_thjodskra <- "Heimild: Þjóðskrá Íslands"
 cap_hms_thjodskra <- "Heimild: Þjóðskrá Íslands og hagdeild Húsnæðis- og mannvirkjastofnunar"
 cap_hagstofa <- "Heimild: Hagstofa Íslands"
@@ -479,3 +479,6 @@ test_graphs <- function(){
   ggsave_both(here("test_graphs", "area"))
   
 }
+
+
+
