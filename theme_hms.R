@@ -86,7 +86,7 @@ theme_hms <- function(tms = 1){
       strip.text.x = element_text(family = "SetimoLight", size = 7 * tsm, color = "black", face = "bold"),
       strip.background = element_blank(),
       
-      plot.title = element_text(family = "Setimo", size = 14 * tsm, face = "bold", color = blue),
+      plot.title = element_text(family = "Setimo", size = 12 * tsm, face = "bold", color = blue),
       plot.subtitle = element_text(family = "Setimo", size = 10 * tsm, color = blue),
       plot.caption = element_text(family = "SetimoLight", size = 8 * tsm, color = blue, face = "italic"),
       axis.title = element_text(size = 7 * tsm),
@@ -514,8 +514,8 @@ visitala_leiguverds <- function(file){
       timi = ymd(paste(Ár, mánuður, "01")),
       Vísitala = "Vísitala leiguverðs"
       ) %>% 
-    rename("Gildi" = "Vísitala") %>% 
-    select(timi, `Vísitala leiguverðs`)
+    rename(Gildi = "Vísitala leiguverðs íbúðarhúsnæðis á höfuðborgarsvæðinu") %>% 
+    select(timi, Gildi, Vísitala)
 }
 
 visitala_ibudaverds <- function(file){
