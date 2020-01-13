@@ -1,5 +1,0 @@
-library(HMSr)
-
-
-theme_hms()
-?theme_hms

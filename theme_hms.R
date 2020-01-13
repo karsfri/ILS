@@ -79,7 +79,7 @@ theme_hms <- function(tms = 1){
       
       plot.background = element_blank(),
       panel.background = element_blank(),
-      panel.grid.major.y = element_line(colour = color_extra, size = 0.2),
+      panel.grid.major.y = element_line(colour = color_extra, size = 0.04),
       panel.grid.major.x = element_blank(),
       
       strip.text = element_text(family = "SetimoLight", size = 7 * tsm, color = "black", face = "bold"),
@@ -481,4 +481,56 @@ test_graphs <- function(){
 }
 
 
+# gögn --------------------------------------------------------------------
 
+visitala_launa <- function(){
+  require(lubridate)
+  require(tidyverse)
+  
+  read_hagstofan(
+    "https://px.hagstofa.is:443/pxis/sq/ca030daf-96e0-4e07-bbab-586a9beb0d0e",
+    decimal_mark = ".",
+    grouping_mark = ","
+    ) %>% 
+    rename(Gildi = "Launavísitala frá 1989") %>% 
+    mutate(
+      timi = ymd(paste(Ár, Mánuður, "01")),
+      Vísitala = "Launavísitala"
+      ) %>% 
+    select(Gildi, timi, Vísitala)
+}
+
+visitala_leiguverds <- function(file){
+  require(readxl)
+  require(lubridate)
+  require(tidyverse)
+  
+  readxl::read_excel(
+    file,
+    skip = 2
+  ) %>% 
+    mutate(
+      mánuður = mánuður %>% str_replace("julí", "júlí"),
+      timi = ymd(paste(Ár, mánuður, "01")),
+      Vísitala = "Vísitala leiguverðs"
+      ) %>% 
+    rename("Gildi" = "Vísitala") %>% 
+    select(timi, `Vísitala leiguverðs`)
+}
+
+visitala_ibudaverds <- function(file){
+  require(readxl)
+  require(lubridate)
+  require(tidyverse)
+  
+  read_excel(
+    file,
+    skip = 2
+  ) %>% 
+    rename(ar = 1, man = 2) %>% 
+    fill(ar, .direction = "up") %>% 
+    mutate(timi = ymd(paste(ar, man, "01"))) %>% 
+    select(-ar, -man) %>% 
+    gather(`Tegund`, `Gildi`, -timi) %>% 
+    mutate(Vísitala = "Vísitala íbúðaverðs")
+}
