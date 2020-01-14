@@ -534,3 +534,25 @@ visitala_ibudaverds <- function(file){
     gather(`Tegund`, `Gildi`, -timi) %>% 
     mutate(Vísitala = "Vísitala íbúðaverðs")
 }
+
+lubriyear <- function(year, month = "01"){
+  require(lubridate)
+  require(tidyverse)
+  ymd(paste(year, month, "01", sep = "-"))
+}
+
+shadow_years <- function(start = 1900, end = 2100, color = red){
+  shadings <- tibble(
+    lower = ymd(paste(seq(start, end - 1, by = 2), 01, 01)),
+    upper = ymd(paste(seq(start + 1, end, by = 2), 01, 01))
+  )
+  
+  geom_rect(
+    aes(xmin = lower , xmax = upper, ymin = -Inf, ymax = Inf), 
+    data = shadings, 
+    inherit.aes=FALSE, 
+    alpha = 0.2, 
+    fill = red) 
+  
+}
+  
