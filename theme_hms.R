@@ -16,12 +16,12 @@ color_extra <- "#11223a"
 # we really need more colors. This is mixture of the new and the old palette
 palette_light <- c(
  "#11223a", # blue - main color
-  "#8cc0c6", # hms2
-  "#b3cfd1", # hms3
-  "#b39271", # hms extra 1
-  "#00aec7", # hms extra 2
-  "#EC8865", # old
-  "#C56BA4"  # old
+  "#d8e6e8", # hms2
+  "#ded1c4", # hms3
+  "#efbcbb", # hms extra 1
+  "#c5e6e6", # hms extra 2
+  "#92b1b0", # old
+  "#b39271"  # old
 )
 
 palette_medium <- c(
@@ -36,12 +36,12 @@ palette_medium <- c(
 
 palette_dark <- c(
   "#11223a", # blue - main color
-  "#8cc0c6", # hms2
-  "#b3cfd1", # hms3
-  "#b39271", # hms extra 1
-  "#00aec7", # hms extra 2
-  "#EC8865", # old
-  "#C56BA4"  # old
+  "#92b1b0", # hms2
+  "#b39271", # hms3
+  "#e25e5c", # hms extra 1
+  "#7cc3c2", # hms extra 2
+  "#d8e6e8", # old
+  "#ded1c4"  # old
 )
 
 # Palette for the montly reports - use for areas and columns
