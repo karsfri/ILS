@@ -250,6 +250,7 @@ cap_thjodskra <- "Heimild: Þjóðskrá Íslands"
 cap_hms_thjodskra <- "Heimild: Þjóðskrá Íslands og hagdeild HMS"
 cap_hagstofa <- "Heimild: Hagstofa Íslands"
 cap_hms_hagstofa <- "Heimild: Hagstofa Íslands og hagdeild HMS"
+cap_hms_sedlo <- "Seðlabanki Íslands og hagdeild HMS"
 
 
 # read functions ----------------------------------------------------------

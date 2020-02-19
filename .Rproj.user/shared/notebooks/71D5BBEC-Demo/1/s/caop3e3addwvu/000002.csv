@@ -1,8 +1,0 @@
-"0","pop_tidy %>% "
-"0","  filter(Ár >= 2013) %>% # Svo að myndin verði ekki of crowded"
-"0","  group_by(Ár, Landssvæði) %>% "
-"0","  summarise("
-"0","    Fólksfjöldi = sum(Fólksfjöldi)"
-"0","  ) %>% "
-"0","  ggplot(aes(x = Ár, y = Fólksfjöldi, color = Landssvæði)) +"
-"0","  geom_line()"

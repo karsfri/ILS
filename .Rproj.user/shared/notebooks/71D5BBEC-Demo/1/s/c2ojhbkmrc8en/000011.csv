@@ -1,7 +1,0 @@
-"0","kaupsamningar %>%
-  ggplot(aes(Dim_Timi_Utgefid, y = fjoldi, color = Landshluti)) +
-  stat_rollapplyr(width = 12, align = ""right"", fun = mean) +
-  geom_line() +
-  facet_wrap(~Landshluti, scales = ""free_y"")
-"
-"2","Ignoring unknown parameters: fun"

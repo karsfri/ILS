@@ -1,8 +1,0 @@
-"0","pop_tidy %>% "
-"0","  filter("
-"0","    # Landssvæði == ""Höfuðborgarsvæði"","
-"0","    Ár %in% c(1998, 2008, 2018)"
-"0","  ) %>% "
-"0","  ggplot(aes(x = Ár, y = Fólksfjöldi, fill = Landssvæði)) +"
-"0","  geom_col(position = position_fill(), width = 9) +"
-"0","  coord_polar(theta = ""y"", start = 0)"

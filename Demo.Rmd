@@ -1,8 +1,15 @@
 ---
 title: "Yfirlit yfir helstu föll og pakka"
 output:
-  html_document:
-    df_print: paged
+    fig_caption: yes
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+    toc_float:
+      collapsed: yes
+  pagedown::chrome_print:
+    toc: true
+    number_sections: false
 ---
 
 Hér má finna stutt yfirlit yfir helstu föll og pakka í R. Demó-ið er fullt af slettum og málfræðivillum. Það er með vilja gert. Stafsetningavillur eru óviljandi.
@@ -90,18 +97,16 @@ knitr::opts_chunk$set(
 )
 
 # Fer yfir pakkanna seinna!
-library(DBI)
-library(tidyverse)
+library(HMSr)        # Pakkinn okkar
+library(DBI)         # Pakki til að tengjast við gagnagrunninn
+library(tidyverse)   # Pakkinn sem breytti því hvernig R er notað
 library(sf)
 library(seasonal)
 library(tsibble)
 library(lubridate)
-library(here)
-library(dbplyr)
-library(ggseas)
-
-# Theme og hjálparföll fyrir myndir
-source("https://github.com/karsfri/ILS/raw/master/theme_hms.R")
+library(here)        # Pakki 
+library(dbplyr)      # Tidyverse fyrir gagnagrunna
+library(ggseas)      # Seasonal adjustment - X13Arima
 
 ```
 
@@ -158,13 +163,7 @@ Hægt er að blanda saman kóða úr mismunandi forritum. Fyrst þarf að búa t
 
 ```{r}
 
-con <- dbConnect(
-  drv = odbc::odbc(),
-  dsn = "HgrDev", 
-  timeout = 10, 
-  # database = "HgrProd",
-  encoding = "WINDOWS-1252"
-  )
+con <- get_connection_windows()
 
 ```
 

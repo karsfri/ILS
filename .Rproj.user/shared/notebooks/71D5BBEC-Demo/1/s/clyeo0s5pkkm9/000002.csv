@@ -1,7 +1,0 @@
-"0",""
-"0","pop_tidy %>% "
-"0","  select(-Alls) %>% "
-"0","  pivot_wider("
-"0","    names_from = Kyn,"
-"0","    values_from = Fólksfjöldi"
-"0","  )"
